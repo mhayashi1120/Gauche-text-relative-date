@@ -16,24 +16,20 @@
          [sec->date (with-module text.relative-date seconds->date)])
     (sec->date (+ (date->sec d) sec))))
 
+;; simple test
+(define (== expected result)
+  (test* #"== ~|result|" expected result))
+
 ;; The following is a dummy test code.
 ;; Replace it for your tests.
-#?= (relative-date->date "1year" test-now)
-#?= (relative-date->date "1 year" test-now)
-#?= (relative-date->date "1y" test-now)
-#?= (relative-date->date "1h" test-now)
-#?= (relative-date->date "1 month" test-now)
-;; TODO
-;; #?= (relative-date->date "1 monthes" test-now)
-#?= (relative-date->date "1 months" test-now)
-
-#?= (relative-date->date "1y1h1m" test-now)
-#?= (relative-date->date "1y1h1m" test-now)
-
-#?= (relative-date->date "1y 1h 1m" test-now)
-
-(define (== expected result)
-  (test* #"~|result|" expected result))
+(== (add-second test-now (* 365 24 60 60)) (relative-date->date "1year" test-now))
+(== (add-second test-now (* 365 24 60 60)) (relative-date->date "1 year" test-now))
+(== (add-second test-now (* 365 24 60 60)) (relative-date->date "1y" test-now))
+(== (add-second test-now (* 60 60))  (relative-date->date "1h" test-now))
+(== (add-second test-now (* 30 24 60 60))  (relative-date->date "1 month" test-now))
+(== (add-second test-now (* 30 24 60 60)) (relative-date->date "1 months" test-now))
+(== (add-second test-now (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60))) (relative-date->date "1y1h1m" test-now))
+(== (add-second test-now (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60))) (relative-date->date "1y 1h 1m" test-now))
 
 (== "just now" (date->relative-date (add-second test-now 0) test-now))
 (== "1 second later" (date->relative-date (add-second test-now 1) test-now))
