@@ -5,7 +5,8 @@
 (use srfi-19)
 (use gauche.test)
 
-(test-start "gauche_text_relative_date")
+(test-start "text.relative-date")
+
 (use text.relative-date)
 (test-module 'text.relative-date)
 

@@ -119,29 +119,42 @@
     [else
      (error "Assert" d)]))
 
+(define (try-parse-full-text s)
+  (define (->number m i)
+    (string->number (m i)))
+
+  (cond
+   [(member (string-trim-both s) '("just now" "now"))
+    0]
+   ;; [(#/^([0-9]+):([0-9]+)$/ s) =>
+   ;;  (^m (+ (* (->number m 1) 60 60) (* (->number m 2) 60)))]
+   ;; [(#/^([0-9]+):([0-9]+):([0-9]+)$/ s) =>
+   ;;  (^m (+ (* (->number m 1) 60 60) (* (->number m 2) 60) (->number m 3)))]
+   [else
+    #f]))
+
 ;; return seconds if TEXT parse is succeeded.
 ;; return with if failed.
 (define (fuzzy-parse-relative-seconds text)
-  (if (member (string-trim-both text) '("just now" "now"))
-    0
-    (let loop ([s text]
-               [diff 0])
-      (cond
-       [(string-null? s)
-        diff]
-       [(#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s) =>
-        (^m
-         (let1 n (ensure-number (string-trim-both (m 1)))
-           (cond
-            [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
-             (^ [m2]
-               (let1 unit (ensure-unit-seconds (m2 1))
-                 (if-let1 m3 (#/^(later|ago)/ (m2 'after))
-                   (let1 direction (ensure-direction (m3 1))
-                     (loop (m3 'after) (+ diff (* n unit direction))))
-                   ;; Default is "later"
-                   (loop (m2 'after) (+ diff (* n unit 1))))))]
-            [else
-             #f])))]
-       [else
-        #f]))))
+  (or (try-parse-full-text text)
+      (let loop ([s text]
+                 [diff 0])
+        (cond
+         [(string-null? s)
+          diff]
+         [(#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s) =>
+          (^m
+           (let1 n (ensure-number (string-trim-both (m 1)))
+             (cond
+              [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
+               (^ [m2]
+                 (let1 unit (ensure-unit-seconds (m2 1))
+                   (if-let1 m3 (#/^(later|ago)/ (m2 'after))
+                     (let1 direction (ensure-direction (m3 1))
+                       (loop (m3 'after) (+ diff (* n unit direction))))
+                     ;; Default is "later"
+                     (loop (m2 'after) (+ diff (* n unit 1))))))]
+              [else
+               #f])))]
+         [else
+          #f]))))
