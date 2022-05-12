@@ -104,7 +104,7 @@
      (* 24 60 60)]
     [(or "hour" "h")
      (* 60 60)]
-    [(or "min" "minute")                ;TODO "M"
+    [(or "min" "minute")
      60]
     [(or "sec" "second" "s")
      1]
