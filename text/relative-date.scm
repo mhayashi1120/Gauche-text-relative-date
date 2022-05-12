@@ -126,10 +126,6 @@
   (cond
    [(member (string-trim-both s) '("just now" "now"))
     0]
-   ;; [(#/^([0-9]+):([0-9]+)$/ s) =>
-   ;;  (^m (+ (* (->number m 1) 60 60) (* (->number m 2) 60)))]
-   ;; [(#/^([0-9]+):([0-9]+):([0-9]+)$/ s) =>
-   ;;  (^m (+ (* (->number m 1) 60 60) (* (->number m 2) 60) (->number m 3)))]
    [else
     #f]))
 
