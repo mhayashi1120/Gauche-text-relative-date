@@ -20,6 +20,8 @@
 (define (== expected result)
   (test* #"== ~|result|" expected result))
 
+;; TODO should add Examples (relative-date->date)
+
 (== (add-second test-now (* 1)) (relative-date->date "1 second" test-now))
 (== (add-second test-now (* 1)) (relative-date->date "1 seconds" test-now))
 (== (add-second test-now (* 1)) (relative-date->date "1second" test-now))
