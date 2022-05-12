@@ -73,7 +73,9 @@
     (^[] (print-relative-date d now))))
 
 (define (relative-date->date s :optional (now (current-date)))
-  ($ seconds->date $ (cut + (date->seconds now) <>) $ fuzzy-parse-relative-seconds s))
+  (and-let* ([sec (fuzzy-parse-relative-seconds s)]
+             [result-sec (+ (date->seconds now) sec)])
+    (seconds->date result-sec)))
 
 (define (ensure-number s)
   (cond
@@ -102,9 +104,9 @@
      (* 24 60 60)]
     [(or "hour" "h")
      (* 60 60)]
-    [(or "min" "minute")
+    [(or "minute" "min")
      60]
-    [(or "sec" "second" "s")
+    [(or "second" "sec" "s")
      1]
     ))
 
@@ -117,26 +119,29 @@
     [else
      (error "Assert" d)]))
 
-;; return seconds
+;; return seconds if TEXT parse is succeeded.
+;; return with if failed.
 (define (fuzzy-parse-relative-seconds text)
-  (let loop ([s text]
-             [diff 0])
-    (cond
-     [(string-null? s)
-      diff]
-     [(#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s) =>
-      (^m
-       (let1 n (ensure-number (string-trim-both (m 1)))
-         (cond
-          [(#/^((year|month|day|hour|min|minute|sec|second)s?|[ymdhs])[ \t]*/i (m 'after)) =>
-           (^ [m2]
-             (let1 unit (ensure-unit-seconds (m2 1))
-               (if-let1 m3 (#/^(later|ago)/ (m2 'after))
-                 (let1 direction (ensure-direction (m3 1))
-                   (loop (m3 'after) (+ diff (* n unit direction))))
-                 ;; (error "Failed to detect direction.")
-                 (loop (m2 'after) (+ diff (* n unit 1))))))]
-          [else
-           (error "Failed to detect unit.")])))]
-     [else
-      (error "Not a valid input text" s)])))
+  (if (member (string-trim-both text) '("just now" "now"))
+    0
+    (let loop ([s text]
+               [diff 0])
+      (cond
+       [(string-null? s)
+        diff]
+       [(#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s) =>
+        (^m
+         (let1 n (ensure-number (string-trim-both (m 1)))
+           (cond
+            [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
+             (^ [m2]
+               (let1 unit (ensure-unit-seconds (m2 1))
+                 (if-let1 m3 (#/^(later|ago)/ (m2 'after))
+                   (let1 direction (ensure-direction (m3 1))
+                     (loop (m3 'after) (+ diff (* n unit direction))))
+                   ;; Default is "later"
+                   (loop (m2 'after) (+ diff (* n unit 1))))))]
+            [else
+             #f])))]
+       [else
+        #f]))))

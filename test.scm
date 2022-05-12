@@ -20,8 +20,9 @@
 (define (== expected result)
   (test* #"== ~|result|" expected result))
 
-;; The following is a dummy test code.
-;; Replace it for your tests.
+(== (add-second test-now (* 1)) (relative-date->date "1 second" test-now))
+(== (add-second test-now (* 1)) (relative-date->date "1 seconds" test-now))
+(== (add-second test-now (* 1)) (relative-date->date "1second" test-now))
 (== (add-second test-now (* 365 24 60 60)) (relative-date->date "1year" test-now))
 (== (add-second test-now (* 365 24 60 60)) (relative-date->date "1 year" test-now))
 (== (add-second test-now (* 365 24 60 60)) (relative-date->date "1y" test-now))
@@ -50,6 +51,31 @@
 (== "1 year later" (date->relative-date (add-second test-now (* 729 24 60 60)) test-now))
 (== "2 years later" (date->relative-date (add-second test-now (* 730 24 60 60)) test-now))
 
+;; Check inversible TEXT
+(define (inverse== text)
+  (let1 d (relative-date->date text test-now)
+    (test* #"~|text| -> ~|d|" text (date->relative-date d test-now))))
+
+(inverse== "just now")
+(inverse== "1 second later")
+(inverse== "30 seconds later")
+(inverse== "30 seconds ago")
+(inverse== "1 minute later")
+(inverse== "2 minutes later")
+(inverse== "1 day later")
+(inverse== "2 days later")
+(inverse== "1 month later")
+(inverse== "1 month later")
+(inverse== "1 month later")
+(inverse== "2 months later")
+(inverse== "2 months later")
+(inverse== "12 months later")
+(inverse== "1 year later")
+(inverse== "1 year later")
+(inverse== "1 year later")
+(inverse== "2 years later")
+
+;; TODO error test
 
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
