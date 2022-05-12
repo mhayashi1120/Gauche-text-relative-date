@@ -4,7 +4,7 @@
 
 (define-gauche-package "Gauche-text-relative-date"
   ;;
-  :version "1.0"
+  :version "0.5.0"
 
   ;; Description of the package.  The first line is used as a short
   ;; summary.
