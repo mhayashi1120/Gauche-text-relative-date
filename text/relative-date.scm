@@ -120,14 +120,45 @@
      (error "Assert" d)]))
 
 (define (try-parse-full-text s)
-  (define (->number m i)
-    (string->number (m i)))
 
   (cond
    [(member (string-trim-both s) '("just now" "now"))
     0]
    [else
     #f]))
+
+(define (try-read-unit s)
+  (and-let1 m (#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s)
+    (let1 n (ensure-number (string-trim-both (m 1)))
+      (cond
+       [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
+        (^ [m2]
+          (let1 unit (ensure-unit-seconds (m2 1))
+            (if-let1 m3 (#/^(later|ago)/ (m2 'after))
+              (let1 direction (ensure-direction (m3 1))
+                (list (m3 'after) (* n unit direction)))
+              ;; Default is "later"
+              (list (m2 'after) (* n unit 1)))))]
+       [else
+        #f]))))
+
+;; Just plan
+;; (define (try-read-colon-separator s)
+;;   (define (->number m i)
+;;     (string->number (m i)))
+
+;;   (cond
+;;    [(#/^([0-9]+):([0-9]+):([0-9]+)\b/ s) =>
+;;     (^m (list (m 'after)
+;;               (+ (* (->number m 1) 60 60)
+;;                  (* (->number m 2) 60)
+;;                  (->number m 3))))]
+;;    [(#/^([0-9]+):([0-9]+)\b/ s) =>
+;;     (^m (list (m 'after)
+;;               (+ (* (->number m 1) 60 60)
+;;                  (* (->number m 2) 60))))]
+;;    [else
+;;     #f]))
 
 ;; return seconds if TEXT parse is succeeded.
 ;; return with if failed.
@@ -138,19 +169,13 @@
         (cond
          [(string-null? s)
           diff]
-         [(#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s) =>
-          (^m
-           (let1 n (ensure-number (string-trim-both (m 1)))
-             (cond
-              [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
-               (^ [m2]
-                 (let1 unit (ensure-unit-seconds (m2 1))
-                   (if-let1 m3 (#/^(later|ago)/ (m2 'after))
-                     (let1 direction (ensure-direction (m3 1))
-                       (loop (m3 'after) (+ diff (* n unit direction))))
-                     ;; Default is "later"
-                     (loop (m2 'after) (+ diff (* n unit 1))))))]
-              [else
-               #f])))]
+         [(try-read-unit s) =>
+          (match-lambda
+           [(rest sec)
+            (loop rest (+ diff sec))])]
+         ;; [(try-read-colon-separator s) =>
+         ;;  (match-lambda
+         ;;   [(rest sec)
+         ;;    (loop rest (+ diff sec))])]
          [else
           #f]))))
