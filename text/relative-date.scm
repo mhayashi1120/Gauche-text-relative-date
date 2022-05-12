@@ -73,7 +73,6 @@
     (^[]
       (print-relative-date d now))))
 
-;; TODO just for the first purpose
 (define (relative-date->date s :optional (now (current-date)))
   ($ seconds->date $ (cut + (date->seconds now) <>) $ fuzzy-parse-relative-seconds s))
 
@@ -142,4 +141,3 @@
            (error "Failed to detect unit.")])))]
      [else
       (error "Not a valid input text" s)])))
-
