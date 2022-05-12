@@ -70,8 +70,7 @@
 
 (define (date->relative-date d :optional (now (current-date)))
   (with-output-to-string
-    (^[]
-      (print-relative-date d now))))
+    (^[] (print-relative-date d now))))
 
 (define (relative-date->date s :optional (now (current-date)))
   ($ seconds->date $ (cut + (date->seconds now) <>) $ fuzzy-parse-relative-seconds s))
