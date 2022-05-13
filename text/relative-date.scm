@@ -18,6 +18,26 @@
 ;; 1year 1y, 1m, 1s ...
 
 ;;;
+;;; Constants
+;;;
+
+(define abbreviate-weekdays
+  #("Sun" "Mon" "Tue" "Wed" "Thu" "Fri" "Sat"))
+
+(define formal-weekdays
+  #("Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"))
+
+(define abbreviate-months
+  #("Jan" "Feb" "Mar" "Apr" "May" "Jun"
+    "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
+
+(define formal-months
+  #("January" "February" "March" "April"
+    "May" "June" "July" "August"
+    "September" "October" "November" "December"
+    ))
+
+;;;
 ;;; Tiny utility
 ;;;
 
