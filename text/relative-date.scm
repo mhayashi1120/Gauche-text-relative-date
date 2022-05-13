@@ -28,11 +28,98 @@
   ($ time-utc->date $ seconds->time $ floor->exact s))
 
 ;;;
-;;; Internal utility
+;;; Unit handling
 ;;;
 
+(define (ensure-number s)
+  (cond
+   [(member s '("a" "an") string-ci=?)
+    1]
+   [(#/^[0-9.]+$/ s)
+    (string->number s)]
+   [else
+    (error "Assert" s)]))
+
+;; Example, nginx handle year as 365day month as 30 day
+(define (ensure-unit-seconds u)
+  (match (string-downcase (trim-plural u))
+    [(or "year" "y")
+     (* 24 60 60 365)]
+    [(or "month" "m")
+     (* 24 60 60 30)]
+    [(or "day" "d")
+     (* 24 60 60)]
+    [(or "hour" "h")
+     (* 60 60)]
+    [(or "minute" "min")
+     60]
+    [(or "second" "sec" "s")
+     1]
+    ))
+
+(define (ensure-direction d)
+  (match (string-downcase d)
+    ["later"
+     1]
+    ["ago"
+     -1]
+    [else
+     (error "Assert" d)]))
+
+(define (trim-plural s)
+  (cond
+   [(#/s$/i s) =>
+    (^m (m 'before))]
+   [else
+    s]))
+
 ;;;
-;;; 
+;;; Parsing
+;;;
+
+(define (try-parse-full-text s)
+
+  (cond
+   [(member (string-trim-both s) '("just now" "now"))
+    0]
+   [else
+    #f]))
+
+(define (try-read-unit s)
+  (and-let1 m (#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s)
+    (let1 n (ensure-number (string-trim-both (m 1)))
+      (cond
+       [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
+        (^ [m2]
+          (let1 unit (ensure-unit-seconds (m2 1))
+            (if-let1 m3 (#/^(later|ago)/ (m2 'after))
+              (let1 direction (ensure-direction (m3 1))
+                (list (m3 'after) (* n unit direction)))
+              ;; Default is "later"
+              (list (m2 'after) (* n unit 1)))))]
+       [else
+        #f]))))
+
+;; Just plan
+;; (define (try-read-colon-separator s)
+;;   (define (->number m i)
+;;     (string->number (m i)))
+
+;;   (cond
+;;    [(#/^([0-9]+):([0-9]+):([0-9]+)\b/ s) =>
+;;     (^m (list (m 'after)
+;;               (+ (* (->number m 1) 60 60)
+;;                  (* (->number m 2) 60)
+;;                  (->number m 3))))]
+;;    [(#/^([0-9]+):([0-9]+)\b/ s) =>
+;;     (^m (list (m 'after)
+;;               (+ (* (->number m 1) 60 60)
+;;                  (* (->number m 2) 60))))]
+;;    [else
+;;     #f]))
+
+;;;
+;;; API
 ;;;
 
 (define (print-relative-date d :optional (now (current-date)))
@@ -89,93 +176,6 @@
   (and-let* ([sec (fuzzy-parse-relative-seconds s)]
              [result-sec (+ (date->seconds now) sec)])
     (seconds->date result-sec)))
-
-(define (ensure-number s)
-  (cond
-   [(member s '("a" "an") string-ci=?)
-    1]
-   [(#/^[0-9.]+$/ s)
-    (string->number s)]
-   [else
-    (error "Assert" s)]))
-
-(define (trim-plural s)
-  (cond
-   [(#/s$/i s) =>
-    (^m (m 'before))]
-   [else
-    s]))
-
-;; Example, nginx handle year as 365day month as 30 day
-(define (ensure-unit-seconds u)
-  (match (string-downcase (trim-plural u))
-    [(or "year" "y")
-     (* 24 60 60 365)]
-    [(or "month" "m")
-     (* 24 60 60 30)]
-    [(or "day" "d")
-     (* 24 60 60)]
-    [(or "hour" "h")
-     (* 60 60)]
-    [(or "minute" "min")
-     60]
-    [(or "second" "sec" "s")
-     1]
-    ))
-
-(define (ensure-direction d)
-  (match (string-downcase d)
-    ["later"
-     1]
-    ["ago"
-     -1]
-    [else
-     (error "Assert" d)]))
-
-(define (try-parse-full-text s)
-
-  (cond
-   [(member (string-trim-both s) '("just now" "now"))
-    0]
-   [else
-    #f]))
-
-(define (try-read-unit s)
-  (and-let1 m (#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s)
-    (let1 n (ensure-number (string-trim-both (m 1)))
-      (cond
-       [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
-        (^ [m2]
-          (let1 unit (ensure-unit-seconds (m2 1))
-            (if-let1 m3 (#/^(later|ago)/ (m2 'after))
-              (let1 direction (ensure-direction (m3 1))
-                (list (m3 'after) (* n unit direction)))
-              ;; Default is "later"
-              (list (m2 'after) (* n unit 1)))))]
-       [else
-        #f]))))
-
-;; Just plan
-;; (define (try-read-colon-separator s)
-;;   (define (->number m i)
-;;     (string->number (m i)))
-
-;;   (cond
-;;    [(#/^([0-9]+):([0-9]+):([0-9]+)\b/ s) =>
-;;     (^m (list (m 'after)
-;;               (+ (* (->number m 1) 60 60)
-;;                  (* (->number m 2) 60)
-;;                  (->number m 3))))]
-;;    [(#/^([0-9]+):([0-9]+)\b/ s) =>
-;;     (^m (list (m 'after)
-;;               (+ (* (->number m 1) 60 60)
-;;                  (* (->number m 2) 60))))]
-;;    [else
-;;     #f]))
-
-;;;
-;;; API
-;;;
 
 ;; return seconds if TEXT parse is succeeded.
 ;; return with if failed.
