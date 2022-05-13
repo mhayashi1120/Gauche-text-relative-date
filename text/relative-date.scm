@@ -6,6 +6,7 @@
   (use srfi-13)
   (use util.match)
   (use srfi-19)
+  (use gauche.parameter)
   (export
    relative-date->date date->relative-date
    fuzzy-parse-relative-seconds
@@ -16,11 +17,23 @@
 ;; consider unit
 ;; 1year 1y, 1m, 1s ...
 
+;;;
+;;; Tiny utility
+;;;
+
 (define (date->seconds d)
   ($ floor->exact $ time->seconds $ date->time-utc d))
 
 (define (seconds->date s)
   ($ time-utc->date $ seconds->time $ floor->exact s))
+
+;;;
+;;; Internal utility
+;;;
+
+;;;
+;;; 
+;;;
 
 (define (print-relative-date d :optional (now (current-date)))
   (let* ([diff-sec (- (date->seconds d) (date->seconds now))]
@@ -159,6 +172,10 @@
 ;;                  (* (->number m 2) 60))))]
 ;;    [else
 ;;     #f]))
+
+;;;
+;;; API
+;;;
 
 ;; return seconds if TEXT parse is succeeded.
 ;; return with if failed.
