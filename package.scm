@@ -35,7 +35,7 @@
 
   ;; List licenses
   ;; e.g. ("BSD")
-  :licenses ()
+  :licenses ("MIT")
 
   ;; Homepage URL, if any.
   ; :homepage "http://example.com/Gauche-text-relative-date/"
