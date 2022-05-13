@@ -6,14 +6,14 @@
  (^m (+ (* (->number m 1) 60 60) (* (->number m 2) 60) (->number m 3)))]
 
 
-01:02 is confused with (1hour 1min) or (1min 1sec) . May be should not introduce.
-
+"01:02" is confused with (1hour 2min) or (1min 2sec) . May be should not introduce.
+On the other hand, "01:02:03" is Not confused. Explicitly 1hour 2min 3sec
 
 # Handle week number
 
-"Next wednesday", "Next Wed", "Before wed"
+"Next wednesday", "Next Wed", "Before wed", "This wed"
 
-# Handle next/last
+# Handle next/last/this
 
 Next month, last month
 Next year, last year
