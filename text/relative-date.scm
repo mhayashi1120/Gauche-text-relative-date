@@ -13,10 +13,6 @@
    ))
 (select-module text.relative-date)
 
-;; ref: https://nginx.org/en/docs/syntax.html
-;; consider unit
-;; 1year 1y, 1m, 1s ...
-
 ;;;
 ;;; Constants
 ;;;
@@ -28,11 +24,14 @@
   #("Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"))
 
 (define abbreviate-months
-  #("Jan" "Feb" "Mar" "Apr" "May" "Jun"
-    "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
+  #(
+    "Jan" "Feb" "Mar" "Apr" "May" "Jun"
+    "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"
+    ))
 
 (define formal-months
-  #("January" "February" "March" "April"
+  #(
+    "January" "February" "March" "April"
     "May" "June" "July" "August"
     "September" "October" "November" "December"
     ))
@@ -46,6 +45,10 @@
 
 (define (seconds->date s)
   ($ time-utc->date $ seconds->time $ floor->exact s))
+
+;; Just diff second part. (omit nanosecond part)
+(define (date-diff d1 d2)
+  (- (date->seconds d1) (date->seconds d2)))
 
 ;;;
 ;;; Unit handling
@@ -120,23 +123,56 @@
        [else
         #f]))))
 
-;; Just plan
-;; (define (try-read-colon-separator s)
-;;   (define (->number m i)
-;;     (string->number (m i)))
+;; -> (REST DIFF-SEC)
+(define (try-read-colon-separator s now)
+  (define (->number m i)
+    (string->number (m i)))
 
-;;   (cond
-;;    [(#/^([0-9]+):([0-9]+):([0-9]+)\b/ s) =>
-;;     (^m (list (m 'after)
-;;               (+ (* (->number m 1) 60 60)
-;;                  (* (->number m 2) 60)
-;;                  (->number m 3))))]
-;;    [(#/^([0-9]+):([0-9]+)\b/ s) =>
-;;     (^m (list (m 'after)
-;;               (+ (* (->number m 1) 60 60)
-;;                  (* (->number m 2) 60))))]
-;;    [else
-;;     #f]))
+  (define (diff-time hh mm ss)
+    (date-diff
+     (make-date
+      0 hh mm (or ss 0)
+      (date-day now) (date-month now) (date-year now)
+      (date-zone-offset now))
+     now))
+
+  (cond
+   ;; Today's this time (hh:mm:ss).
+   [(#/^([0-9]+):([0-9]+):([0-9]+)\b/ s) =>
+    (^m (list (m 'after)
+              (diff-time
+               (->number m 1)
+               (->number m 2)
+               (->number m 3)
+               )))]
+   [(#/^([0-9]+):([0-9]+)\b/ s) =>
+    (^m (list (m 'after)
+              (diff-time
+               (->number m 1)
+               (->number m 2)
+               0)))]
+   [else
+    #f]))
+
+(define (vector->iregexp-reader . vs)
+  ($ (cut string->regexp <> :case-fold #t)
+     $ (cut format "^(~a)\b" <>)
+     $ (cut string-join <> "|")
+     $ map regexp-quote
+     $ append-map vector->list vs))
+
+;; -> (REST SEC DIRECTION)
+(define (try-read-weekday s now)
+  (let* ([weekday-re (vector->iregexp-reader abbreviate-weekdays formal-weekdays)])
+    (cond
+     [(#/^(this|next|last)[ \t]+/i s) =>
+      (^m 
+       (let* ([prefix (m 1)]
+              [m2 (weekday-re (string-trim (m 'after)))])
+         ;; TODO
+         (error "Not yet implemented")))]
+     [else
+      #f])))
 
 ;;;
 ;;; API
@@ -162,23 +198,23 @@
         (format #t "~a minute" diff-min)
         (when (< 1 diff-min)
           (format #t "s")))]
-     [(< diff-abs (* 24 60 60))
+     [(< diff-abs (* 60 60 24))
       (let1 diff-hour (div diff-abs (* 60 60))
         (format #t "~a hour" diff-hour)
         (when (< 1 diff-hour)
           (format #t "s")))]
-     [(< diff-abs (* 24 60 60 30))
-      (let1 diff-day (div diff-abs (* 24 60 60))
+     [(< diff-abs (*  60 60 24 30))
+      (let1 diff-day (div diff-abs (* 60 60 24))
         (format #t "~a day" diff-day)
         (when (< 1 diff-day)
           (format #t "s")))]
-     [(< diff-abs (* 24 60 60 365))
-      (let1 diff-month (div diff-abs (* 24 60 60 30))
+     [(< diff-abs (* 60 60 24 365))
+      (let1 diff-month (div diff-abs (* 60 60 24 30))
         (format #t "~a month" diff-month)
         (when (< 1 diff-month)
           (format #t "s")))]
      [else
-      (let1 diff-year (div diff-abs (* 24 60 60 365))
+      (let1 diff-year (div diff-abs (* 60 60 24 365))
         (format #t "~a year" diff-year)
         (when (< 1 diff-year)
           (format #t "s")))])
@@ -193,13 +229,13 @@
     (^[] (print-relative-date d now))))
 
 (define (relative-date->date s :optional (now (current-date)))
-  (and-let* ([sec (fuzzy-parse-relative-seconds s)]
+  (and-let* ([sec (fuzzy-parse-relative-seconds s now)]
              [result-sec (+ (date->seconds now) sec)])
     (seconds->date result-sec)))
 
 ;; return seconds if TEXT parse is succeeded.
 ;; return with if failed.
-(define (fuzzy-parse-relative-seconds text)
+(define (fuzzy-parse-relative-seconds text :optional (now (current-date)))
   (or (try-parse-full-text text)
       (let loop ([s text]
                  [diff 0])
@@ -210,9 +246,13 @@
           (match-lambda
            [(rest sec)
             (loop rest (+ diff sec))])]
-         ;; [(try-read-colon-separator s) =>
-         ;;  (match-lambda
-         ;;   [(rest sec)
-         ;;    (loop rest (+ diff sec))])]
+         [(try-read-colon-separator s now) =>
+          (match-lambda
+           [(rest sec)
+            (loop rest (+ diff sec))])]
+         [(try-read-weekday s now) =>
+          (match-lambda
+           [(rest sec direction)
+            (loop rest (+ diff sec))])]
          [else
           #f]))))

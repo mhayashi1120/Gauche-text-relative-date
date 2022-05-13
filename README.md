@@ -27,3 +27,9 @@ Can read followings:
 - 2 days later
 - 1 year later
 
+
+## References
+
+- https://nginx.org/en/docs/syntax.html
+
+
