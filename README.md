@@ -23,6 +23,8 @@ Can read followings:
 - an hour later == 1 hour later
 - 1y1m1d == 1 year 1 month 1 day later
 - 1h 2min 3sec == 1h 2minutes 3seconds
+- next thu == next Thursday
+- next mon == Next Monday
 - 01:02:03 (TODO not yet supported)
 - 01:02:03 ago (TODO not yet supported)
 

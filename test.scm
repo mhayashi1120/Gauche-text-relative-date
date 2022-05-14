@@ -113,11 +113,6 @@
      [else
       #t])))
 
-(synonym== "2 days ago" "1 day ago 1 day ago")
-(synonym== "next thu" "next Thursday")
-(synonym== "next mon" "Next Monday")
-(synonym== "next mon next thu" "Next Monday Next Thursday")
-
 (synonym== "a day" "a day later" "1 day later")
 (synonym== "a day ago" "an day ago")
 (synonym== "2 days ago" "2 day ago")
@@ -126,6 +121,10 @@
 (synonym== "an hour later" "1 hour later")
 (synonym== "1y1m1d" "1 year 1 month 1 day later")
 (synonym== "1h 2min 3sec" "1h 2minutes 3seconds")
+(synonym== "2 days ago" "1 day ago 1 day ago")
+(synonym== "next thu" "next Thursday")
+(synonym== "next mon" "Next Monday")
+(synonym== "next mon next thu" "Next Monday Next Thursday")
 
 ;; Private procedure test
 
