@@ -236,19 +236,15 @@
            [wi* (find-weekday-index* weekday)])
 
       (unless wi*
-        (error "TODO assert. must be found." weekday))
+        (error "Assert. Weekday must be found." weekday))
 
       (cond
        [(zero? direction)
         (- wi* now-wi*)]
        [(negative? direction)
-        (if (= now-wi* wi*)
-          -7
-          (- (mod (- now-wi* wi*) 7)))]
+        (- (+ 7 (modulo (- now-wi* wi*) -7)))]
        [(positive? direction)
-        (if (= wi* now-wi*)
-          7
-          (mod (- wi* now-wi*) 7))]
+        (+ 7 (modulo (- wi* now-wi*) -7))]
        )
       ))
 
