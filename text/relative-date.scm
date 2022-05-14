@@ -3,15 +3,26 @@
 ;;;
 
 (define-module text.relative-date
+  (use gauche.sequence)
   (use srfi-13)
   (use util.match)
   (use srfi-19)
   (use gauche.parameter)
+  (use toolbox.rail)
   (export
+   relative-date-weekend
    relative-date->date date->relative-date
    fuzzy-parse-relative-seconds
    ))
 (select-module text.relative-date)
+
+;;;
+;;; Parameter
+;;;
+
+;; default `6` means "Saturday". This maybe "Sunday" (= 0) some of cases.
+(define relative-date-weekend
+  (make-parameter 6))
 
 ;;;
 ;;; Constants
@@ -36,6 +47,9 @@
     "September" "October" "November" "December"
     ))
 
+(define (ci-index-of v vec)
+  (find-index (^x (string-ci=? v x)) vec))
+
 ;;;
 ;;; Tiny utility
 ;;;
@@ -43,12 +57,47 @@
 (define (date->seconds d)
   ($ floor->exact $ time->seconds $ date->time-utc d))
 
-(define (seconds->date s)
-  ($ time-utc->date $ seconds->time $ floor->exact s))
+(define (seconds->date s :optional (zone #f))
+  ;; TODO more smart
+  (define time->date
+    (if zone
+      (cut time-utc->date <> zone)
+      (cut time-utc->date <>)))
+
+  ($ time->date
+     $ seconds->time
+     $ floor->exact s))
+
+(define (add-seconds d n)
+  ($ seconds->date $ + (date->seconds d) n))
+
+(define (add-days d n)
+  (add-seconds d (* 24 60 60)))
 
 ;; Just diff second part. (omit nanosecond part)
 (define (date-diff d1 d2)
   (- (date->seconds d1) (date->seconds d2)))
+
+(define (date-weekday d)
+  (date-week-day d))
+
+(define (weekday->weekday* n)
+  (let* ([weekcnt (vector-length formal-weekdays)]
+         [bow (mod (+ (relative-date-weekend) 1) weekcnt)]
+         [n (- n bow)])
+    (mod n weekcnt)))
+
+(define (find-weekday-index s)
+  (or (ci-index-of s abbreviate-weekdays)
+      (ci-index-of s formal-weekdays)))
+
+(define (date-weekday* d)
+  (weekday->weekday* (date-weekday d)))
+
+(define (find-weekday-index* s)
+  (if-let1 i (find-weekday-index s)
+    (weekday->weekday* i)
+    #f))
 
 ;;;
 ;;; Unit handling
@@ -100,7 +149,7 @@
 ;;; Parsing
 ;;;
 
-(define (try-parse-full-text s)
+(define (try-parse-symbolic-text s)
 
   (cond
    [(member (string-trim-both s) '("just now" "now"))
@@ -109,7 +158,7 @@
     #f]))
 
 (define (try-read-unit s)
-  (and-let1 m (#/^(([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s)
+  (and-let1 m (#/^([-+]?([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s)
     (let1 n (ensure-number (string-trim-both (m 1)))
       (cond
        [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
@@ -156,21 +205,64 @@
 
 (define (vector->iregexp-reader . vs)
   ($ (cut string->regexp <> :case-fold #t)
-     $ (cut format "^(~a)\b" <>)
+     $ (cut format "^(~a)\\b" <>)
      $ (cut string-join <> "|")
      $ map regexp-quote
      $ append-map vector->list vs))
 
-;; -> (REST SEC DIRECTION)
+;; "last":
+;;    ----
+;; ---+
+;; "this":
+;; ---+---
+;; "next":
+;;     +--
+;; -----
+
+;; -> (REST DAYS)
 (define (try-read-weekday s now)
+  (define (compute-weekday prefix weekday)
+    (let* ([now-wi* (date-weekday* now)]
+           [pref (string-downcase prefix)]
+           [direction (cond
+                       [(member pref '("last"))
+                        -1]
+                       [(member pref '("this"))
+                        0]
+                       [(member pref '("next"))
+                        1]
+                       [else
+                        (ASSERT #f)])]
+           [wi* (find-weekday-index* weekday)])
+
+      (unless wi*
+        (error "TODO assert. must be found." weekday))
+
+      (cond
+       [(zero? direction)
+        (- wi* now-wi*)]
+       [(negative? direction)
+        (if (= now-wi* wi*)
+          -7
+          (- (mod (- now-wi* wi*) 7)))]
+       [(positive? direction)
+        (if (= wi* now-wi*)
+          7
+          (mod (- wi* now-wi*) 7))]
+       )
+      ))
+
   (let* ([weekday-re (vector->iregexp-reader abbreviate-weekdays formal-weekdays)])
     (cond
      [(#/^(this|next|last)[ \t]+/i s) =>
       (^m 
-       (let* ([prefix (m 1)]
-              [m2 (weekday-re (string-trim (m 'after)))])
-         ;; TODO
-         (error "Not yet implemented")))]
+       (and-let* ([prefix (m 1)]
+                  [m2 (weekday-re (string-trim (m 'after)))]
+                  [weekday (m2 1)])
+         (list (m2 'after) (compute-weekday prefix weekday))))]
+     [(weekday-re s) => 
+      (^m (let ([weekday (m 1)])
+            (list (m 'after) (compute-weekday "this" weekday))))]
      [else
       #f])))
 
@@ -231,28 +323,29 @@
 (define (relative-date->date s :optional (now (current-date)))
   (and-let* ([sec (fuzzy-parse-relative-seconds s now)]
              [result-sec (+ (date->seconds now) sec)])
-    (seconds->date result-sec)))
+    (seconds->date result-sec (date-zone-offset now))))
 
 ;; return seconds if TEXT parse is succeeded.
 ;; return with if failed.
 (define (fuzzy-parse-relative-seconds text :optional (now (current-date)))
-  (or (try-parse-full-text text)
-      (let loop ([s text]
+  (or (try-parse-symbolic-text text)
+      (let loop ([source (string-trim-right text)]
                  [diff 0])
-        (cond
-         [(string-null? s)
-          diff]
-         [(try-read-unit s) =>
-          (match-lambda
-           [(rest sec)
-            (loop rest (+ diff sec))])]
-         [(try-read-colon-separator s now) =>
-          (match-lambda
-           [(rest sec)
-            (loop rest (+ diff sec))])]
-         [(try-read-weekday s now) =>
-          (match-lambda
-           [(rest sec direction)
-            (loop rest (+ diff sec))])]
-         [else
-          #f]))))
+        (let1 s (string-trim source)
+          (cond
+           [(string-null? s)
+            diff]
+           [(try-read-unit s) =>
+            (match-lambda
+             [(rest sec)
+              (loop rest (+ diff sec))])]
+           [(try-read-colon-separator s now) =>
+            (match-lambda
+             [(rest sec)
+              (loop rest (+ diff sec))])]
+           [(try-read-weekday s now) =>
+            (match-lambda
+             [(rest days)
+              (loop rest (+ diff (* days 24 60 60)))])]
+           [else
+            #f])))))

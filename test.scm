@@ -15,44 +15,69 @@
 (define (add-second d sec)
   (let* ([date->sec (with-module text.relative-date date->seconds)]
          [sec->date (with-module text.relative-date seconds->date)])
-    (sec->date (+ (date->sec d) sec))))
+    (sec->date (+ (date->sec d) sec) (date-zone-offset d))))
 
 ;; simple test
 (define (== expected result)
   (test* #"== ~|result|" expected result))
 
 ;; TODO should add Examples (relative-date->date)
+(define (leeway== leeway-seconds t)
+  (== (add-second test-now leeway-seconds)
+      (relative-date->date t test-now)))
 
-(== (add-second test-now (* 1)) (relative-date->date "1 second" test-now))
-(== (add-second test-now (* 1)) (relative-date->date "1 seconds" test-now))
-(== (add-second test-now (* 1)) (relative-date->date "1second" test-now))
-(== (add-second test-now (* 365 24 60 60)) (relative-date->date "1year" test-now))
-(== (add-second test-now (* 365 24 60 60)) (relative-date->date "1 year" test-now))
-(== (add-second test-now (* 365 24 60 60)) (relative-date->date "1y" test-now))
-(== (add-second test-now (* 60 60))  (relative-date->date "1h" test-now))
-(== (add-second test-now (* 30 24 60 60))  (relative-date->date "1 month" test-now))
-(== (add-second test-now (* 30 24 60 60)) (relative-date->date "1 months" test-now))
-(== (add-second test-now (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60))) (relative-date->date "1y1h1m" test-now))
-(== (add-second test-now (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60))) (relative-date->date "1y 1h 1m" test-now))
+(leeway== (* 0) "now")
+(leeway== (* 0) "just now")
+(leeway== (* 0) "365 days ago 1 year later")
+(leeway== (* 0) "1 second 1 second ago")
+(leeway== (* 1) "1 second")
+(leeway== (* 1) "1 seconds")
+(leeway== (* 1) "1second")
+(leeway== (* 365 24 60 60) "1year")
+(leeway== (* 365 24 60 60) "1 year")
+(leeway== (* 365 24 60 60) "1y")
+(leeway== (* 60 60) "1h")
+(leeway== (* 30 24 60 60) "1 month")
+(leeway== (* 30 24 60 60) "1 months")
+(leeway== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y1h1m")
+(leeway== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y 1h 1m")
 
-(== "just now" (date->relative-date (add-second test-now 0) test-now))
-(== "1 second later" (date->relative-date (add-second test-now 1) test-now))
-(== "30 seconds later" (date->relative-date (add-second test-now 30) test-now))
-(== "30 seconds ago" (date->relative-date (add-second test-now -30) test-now))
-(== "1 minute later" (date->relative-date (add-second test-now 60) test-now))
-(== "2 minutes later" (date->relative-date (add-second test-now 120) test-now))
-(== "1 day later" (date->relative-date (add-second test-now (* 24 60 60)) test-now))
-(== "2 days later" (date->relative-date (add-second test-now (* 2 24 60 60)) test-now))
-(== "1 month later" (date->relative-date (add-second test-now (* 30 24 60 60)) test-now))
-(== "1 month later" (date->relative-date (add-second test-now (* 31 24 60 60)) test-now))
-(== "1 month later" (date->relative-date (add-second test-now (* 59 24 60 60)) test-now))
-(== "2 months later" (date->relative-date (add-second test-now (* 60 24 60 60)) test-now))
-(== "2 months later" (date->relative-date (add-second test-now (* 61 24 60 60)) test-now))
-(== "12 months later" (date->relative-date (add-second test-now (* 364 24 60 60)) test-now))
-(== "1 year later" (date->relative-date (add-second test-now (* 365 24 60 60)) test-now))
-(== "1 year later" (date->relative-date (add-second test-now (* 366 24 60 60)) test-now))
-(== "1 year later" (date->relative-date (add-second test-now (* 729 24 60 60)) test-now))
-(== "2 years later" (date->relative-date (add-second test-now (* 730 24 60 60)) test-now))
+(let ([now (make-date 0 1 2 3 4 6 2020 12345)]) ;; Thu
+  (== (make-date 0 1 2 3 10 6 2020 12345) (relative-date->date "next wed" now))
+  (== (make-date 0 1 2 3 3 6 2020 12345) (relative-date->date "last wed" now))
+  (== (make-date 0 1 2 3 3 6 2020 12345) (relative-date->date "this wed" now))
+
+  (== (make-date 0 1 2 3 11 6 2020 12345) (relative-date->date "next thu" now))
+  (== (make-date 0 1 2 3 28 5 2020 12345) (relative-date->date "last thu" now))
+  (== (make-date 0 1 2 3 4 6 2020 12345) (relative-date->date "this thu" now))
+
+  (== (make-date 0 1 2 3 5 6 2020 12345) (relative-date->date "next fri" now))
+  (== (make-date 0 1 2 3 29 5 2020 12345) (relative-date->date "last fri" now))
+  (== (make-date 0 1 2 3 5 6 2020 12345) (relative-date->date "this fri" now))
+  )
+
+(define (text== t leeway-seconds)
+  (== t
+      (date->relative-date (add-second test-now leeway-seconds) test-now)))
+
+(text== "just now"         0)
+(text== "1 second later"   1)
+(text== "30 seconds later" 30)
+(text== "30 seconds ago"   -30)
+(text== "1 minute later"   60)
+(text== "2 minutes later"  120)
+(text== "1 day later"      (* 24 60 60))
+(text== "2 days later"     (* 2 24 60 60))
+(text== "1 month later"    (* 30 24 60 60))
+(text== "1 month later"    (* 31 24 60 60))
+(text== "1 month later"    (* 59 24 60 60))
+(text== "2 months later"   (* 60 24 60 60))
+(text== "2 months later"   (* 61 24 60 60))
+(text== "12 months later"  (* 364 24 60 60))
+(text== "1 year later"     (* 365 24 60 60))
+(text== "1 year later"     (* 366 24 60 60))
+(text== "1 year later"     (* 729 24 60 60))
+(text== "2 years later"    (* 730 24 60 60))
 
 ;; Check inversible TEXT
 (define (inverse== text)
@@ -77,6 +102,38 @@
 (inverse== "1 year later")
 (inverse== "1 year later")
 (inverse== "2 years later")
+
+(define (synonym== t1 t2)
+  (let* ([d1 (relative-date->date t1 test-now)]
+         [d2 (relative-date->date t2 test-now)])
+    (test* #"~|t1| == ~|t2|" d1 d2))
+  )
+
+(synonym== "2 days ago" "1 day ago 1 day ago")
+(synonym== "next thu" "next Thursday")
+(synonym== "next mon" "Next Monday")
+(synonym== "next mon next thu" "Next Monday Next Thursday")
+
+
+;; Private procedure test
+
+(let1 proc (with-module text.relative-date date-weekday*)
+  (parameterize ([relative-date-weekend 6])
+    (== 1 (proc (add-second test-now (* 0 24 60 60))))
+    (== 2 (proc (add-second test-now (* 1 24 60 60))))
+    (== 3 (proc (add-second test-now (* 2 24 60 60))))
+    (== 0 (proc (add-second test-now (* 6 24 60 60))))
+    (== 1 (proc (add-second test-now (* 7 24 60 60))))
+    )
+  (parameterize ([relative-date-weekend 0])
+    (== 0 (proc (add-second test-now (* 0 24 60 60))))
+    (== 1 (proc (add-second test-now (* 1 24 60 60))))
+    (== 2 (proc (add-second test-now (* 2 24 60 60))))
+    (== 6 (proc (add-second test-now (* 6 24 60 60))))
+    (== 0 (proc (add-second test-now (* 7 24 60 60))))
+    )
+  )
+
 
 ;; TODO error test
 
