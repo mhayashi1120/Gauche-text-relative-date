@@ -22,7 +22,7 @@ Can read followings:
 - 2 hours ago == 120 minutes ago
 - an hour later == 1 hour later
 - 1y1m1d == 1 year 1 month 1 day later
-- 1h 2min 3sec
+- 1h 2min 3sec == 1h 2minutes 3seconds
 - 01:02:03 (TODO not yet supported)
 - 01:02:03 ago (TODO not yet supported)
 
@@ -36,6 +36,7 @@ Can read followings:
 
 ## References
 
-- https://nginx.org/en/docs/syntax.html
+- [Configuration file measurement units](https://nginx.org/en/docs/syntax.html)
 - TODO at
-- TODO GNU `date` command
+- [Date input formats (GNU Coreutils 9.1)](https://www.gnu.org/software/coreutils/manual/html_node/Date-input-formats.html#Date-input-formats) (Not exact same although)
+

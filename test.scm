@@ -103,17 +103,29 @@
 (inverse== "1 year later")
 (inverse== "2 years later")
 
-(define (synonym== t1 t2)
+(define (synonym== t1 t2 . ts)
   (let* ([d1 (relative-date->date t1 test-now)]
          [d2 (relative-date->date t2 test-now)])
-    (test* #"~|t1| == ~|t2|" d1 d2))
-  )
+    (test* #"~|t1| == ~|t2|" d1 d2)
+    (cond
+     [(pair? ts)
+      (apply synonym== t2 ts)]
+     [else
+      #t])))
 
 (synonym== "2 days ago" "1 day ago 1 day ago")
 (synonym== "next thu" "next Thursday")
 (synonym== "next mon" "Next Monday")
 (synonym== "next mon next thu" "Next Monday Next Thursday")
 
+(synonym== "a day" "a day later" "1 day later")
+(synonym== "a day ago" "an day ago")
+(synonym== "2 days ago" "2 day ago")
+(synonym== "an hour ago" "1 hour ago")
+(synonym== "2 hours ago" "120 minutes ago")
+(synonym== "an hour later" "1 hour later")
+(synonym== "1y1m1d" "1 year 1 month 1 day later")
+(synonym== "1h 2min 3sec" "1h 2minutes 3seconds")
 
 ;; Private procedure test
 
