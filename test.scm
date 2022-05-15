@@ -56,6 +56,38 @@
   (== (make-date 0 1 2 3 5 6 2020 12345) (relative-date->date "this fri" now))
   )
 
+(let ([now (make-date 0 1 2 3 14 5 2022 32600)]) ;; Sat
+  ;; default parameter
+  (parameterize ([relative-date-weekend 6])
+    (== (make-date 0 1 2 3 20 5 2022 32600) (relative-date->date "next fri" now))
+    (== (make-date 0 1 2 3 13 5 2022 32600) (relative-date->date "last fri" now))
+    (== (make-date 0 1 2 3 13 5 2022 32600) (relative-date->date "this fri" now))
+
+    (== (make-date 0 1 2 3 21 5 2022 32600) (relative-date->date "next sat" now))
+    (== (make-date 0 1 2 3  7 5 2022 32600) (relative-date->date "last sat" now))
+    (== (make-date 0 1 2 3 14 5 2022 32600) (relative-date->date "this sat" now))
+
+    (== (make-date 0 1 2 3 15 5 2022 32600) (relative-date->date "next sun" now))
+    (== (make-date 0 1 2 3  8 5 2022 32600) (relative-date->date "last sun" now))
+    (== (make-date 0 1 2 3  8 5 2022 32600) (relative-date->date "this sun" now))
+    )
+  ;; Weekend as Sunday
+  (parameterize ([relative-date-weekend 0])
+    (== (make-date 0 1 2 3 20 5 2022 32600) (relative-date->date "next fri" now))
+    (== (make-date 0 1 2 3 13 5 2022 32600) (relative-date->date "last fri" now))
+    (== (make-date 0 1 2 3 13 5 2022 32600) (relative-date->date "this fri" now))
+
+    (== (make-date 0 1 2 3 21 5 2022 32600) (relative-date->date "next sat" now))
+    (== (make-date 0 1 2 3  7 5 2022 32600) (relative-date->date "last sat" now))
+    (== (make-date 0 1 2 3 14 5 2022 32600) (relative-date->date "this sat" now))
+
+    (== (make-date 0 1 2 3 15 5 2022 32600) (relative-date->date "next sun" now))
+    (== (make-date 0 1 2 3  8 5 2022 32600) (relative-date->date "last sun" now))
+    (== (make-date 0 1 2 3 15 5 2022 32600) (relative-date->date "this sun" now)) ;only differ
+    )
+  )
+
+
 (define (text== t leeway-seconds)
   (== t
       (date->relative-date (add-second test-now leeway-seconds) test-now)))

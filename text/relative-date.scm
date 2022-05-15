@@ -238,6 +238,7 @@
       (unless wi*
         (error "Assert. Weekday must be found." weekday))
 
+      ;; TODO FIXME: more elegant
       (cond
        [(zero? direction)
         (- wi* now-wi*)]
