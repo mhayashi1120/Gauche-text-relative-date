@@ -1,6 +1,6 @@
 # Gauche-text-relative-date
 
-Intended to use parse date text in command-line app.
+Intended to use roughly parse date text.
 
 Main entry procedures are:
 
@@ -9,7 +9,7 @@ Main entry procedures are:
 - fuzzy-parse-relative-seconds
 
 This package roughly computed as Year (= 365 days) Month (= 30 days) . 
-And not been considered to try exact parsing.
+And **NOT** been considered to try exact parsing and point exact time.
 
 ## Examples (relative-date->date):
 

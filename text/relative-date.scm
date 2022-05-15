@@ -194,6 +194,7 @@
                (->number m 2)
                (->number m 3)
                )))]
+   ;; Considered as hh:mm
    [(#/^([0-9]+):([0-9]+)\b/ s) =>
     (^m (list (m 'after)
               (diff-time

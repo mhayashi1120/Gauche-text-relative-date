@@ -26,6 +26,13 @@
   (== (add-second test-now leeway-seconds)
       (relative-date->date t test-now)))
 
+;; Examples
+(leeway== (* 0) "just now")
+(leeway== (* -1 24 60 60) "1 day ago")
+(leeway== (* 2 24 60 60) "2 days later")
+(leeway== (* 365 24 60 60) "1 year later")
+(leeway== (* 0) "1 year later 365 days ago")
+
 (leeway== (* 0) "now")
 (leeway== (* 0) "just now")
 (leeway== (* 0) "365 days ago 1 year later")
@@ -118,22 +125,27 @@
 
 (inverse== "just now")
 (inverse== "1 second later")
+(inverse== "5 seconds ago")
 (inverse== "30 seconds later")
 (inverse== "30 seconds ago")
 (inverse== "1 minute later")
 (inverse== "2 minutes later")
+(inverse== "3 minutes ago")
+(inverse== "2 days ago")
 (inverse== "1 day later")
 (inverse== "2 days later")
 (inverse== "1 month later")
 (inverse== "1 month later")
 (inverse== "1 month later")
 (inverse== "2 months later")
+(inverse== "3 months ago")
 (inverse== "2 months later")
 (inverse== "12 months later")
 (inverse== "1 year later")
 (inverse== "1 year later")
 (inverse== "1 year later")
 (inverse== "2 years later")
+(inverse== "3 years ago")
 
 (define (synonym== t1 t2 . ts)
   (let* ([d1 (relative-date->date t1 test-now)]
@@ -177,8 +189,12 @@
     )
   )
 
+(define (inconvertible? text)
+  (test* #"~|text|" #f (relative-date->date text)))
 
-;; TODO error test
+;; TODO more negative test
+(inconvertible? "a day invalid trailing")
+(inconvertible? "invalid preceeding a day")
 
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
