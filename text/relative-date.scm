@@ -121,11 +121,11 @@
      (* 24 60 60 30)]
     [(or "day" "d")
      (* 24 60 60)]
-    [(or "hour" "h")
+    [(or "hour")
      (* 60 60)]
     [(or "minute" "min")
      60]
-    [(or "second" "sec" "s")
+    [(or "second" "sec")
      1]
     ))
 
@@ -170,7 +170,7 @@
   (and-let1 m (#/^([-+]?([0-9]+[ \t]*)|(?:(?:an?)[ \t]+))/i s)
     (let1 n (ensure-number (string-trim-both (m 1)))
       (cond
-       [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymdhs])[ \t]*/i (m 'after)) =>
+       [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymd])[ \t]*/i (m 'after)) =>
         (^ [m2]
           (let1 unit (ensure-unit-seconds (m2 1))
             (if-let1 m3 (#/^(later|ago)/ (m2 'after))

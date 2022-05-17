@@ -43,11 +43,11 @@
 (parsed== (* 365 24 60 60) "1year")
 (parsed== (* 365 24 60 60) "1 year")
 (parsed== (* 365 24 60 60) "1y")
-(parsed== (* 60 60) "1h")
+(parsed== (* 60 60) "1hour")
 (parsed== (* 30 24 60 60) "1 month")
 (parsed== (* 30 24 60 60) "1 months")
-(parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y1h1m")
-(parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y 1h 1m")
+(parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y1hour1month")
+(parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y 1hour 1month")
 
 (let ([now (make-date 0 1 2 3 4 6 2020 12345)]) ;; Thu
   (== (make-date 0 1 2 3 10 6 2020 12345) (relative-date->date "next wed" now))
@@ -164,7 +164,7 @@
 (synonym== "2 hours ago" "120 minutes ago")
 (synonym== "an hour later" "1 hour later")
 (synonym== "1y1m1d" "1 year 1 month 1 day later")
-(synonym== "1h 2min 3sec" "1h 2minutes 3seconds")
+(synonym== "1hour 2min 3sec" "1hour 2minutes 3seconds")
 (synonym== "2 days ago" "1 day ago 1 day ago")
 (synonym== "next thu" "next Thursday")
 (synonym== "next mon" "Next Monday")
