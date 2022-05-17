@@ -149,11 +149,20 @@
 ;;; Parsing
 ;;;
 
-(define (try-parse-symbolic-text s)
-
+;; Exact match whole text.
+(define (try-parse-full-symbolic s)
   (cond
    [(member (string-trim-both s) '("just now" "now"))
     0]
+   [else
+    #f]))
+
+(define (try-read-symbol-text s)
+  (cond
+   [(#/^tomorrow\b/ s) =>
+    (^m (list (m 'after) (*  1 24 60 60)))]
+   [(#/^yesterday\b/ s) =>
+    (^m (list (m 'after) (* -1 24 60 60)))]
    [else
     #f]))
 
@@ -326,7 +335,7 @@
 ;; return seconds if TEXT parse is succeeded.
 ;; return with if failed.
 (define (fuzzy-parse-relative-seconds text :optional (now (current-date)))
-  (or (try-parse-symbolic-text text)
+  (or (try-parse-full-symbolic text)
       (let loop ([source (string-trim-right text)]
                  [diff 0])
         (let1 s (string-trim source)
@@ -334,6 +343,10 @@
            [(string-null? s)
             diff]
            [(try-read-unit s) =>
+            (match-lambda
+             [(rest sec)
+              (loop rest (+ diff sec))])]
+           [(try-read-symbol-text s) =>
             (match-lambda
              [(rest sec)
               (loop rest (+ diff sec))])]

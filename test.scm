@@ -22,32 +22,32 @@
   (test* #"== ~|result|" expected result))
 
 ;; TODO should add Examples (relative-date->date)
-(define (leeway== leeway-seconds t)
-  (== (add-second test-now leeway-seconds)
+(define (parsed== additional-seconds t)
+  (== (add-second test-now additional-seconds)
       (relative-date->date t test-now)))
 
 ;; Examples
-(leeway== (* 0) "just now")
-(leeway== (* -1 24 60 60) "1 day ago")
-(leeway== (* 2 24 60 60) "2 days later")
-(leeway== (* 365 24 60 60) "1 year later")
-(leeway== (* 0) "1 year later 365 days ago")
+(parsed== (* 0) "just now")
+(parsed== (* -1 24 60 60) "1 day ago")
+(parsed== (* 2 24 60 60) "2 days later")
+(parsed== (* 365 24 60 60) "1 year later")
+(parsed== (* 0) "1 year later 365 days ago")
 
-(leeway== (* 0) "now")
-(leeway== (* 0) "just now")
-(leeway== (* 0) "365 days ago 1 year later")
-(leeway== (* 0) "1 second 1 second ago")
-(leeway== (* 1) "1 second")
-(leeway== (* 1) "1 seconds")
-(leeway== (* 1) "1second")
-(leeway== (* 365 24 60 60) "1year")
-(leeway== (* 365 24 60 60) "1 year")
-(leeway== (* 365 24 60 60) "1y")
-(leeway== (* 60 60) "1h")
-(leeway== (* 30 24 60 60) "1 month")
-(leeway== (* 30 24 60 60) "1 months")
-(leeway== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y1h1m")
-(leeway== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y 1h 1m")
+(parsed== (* 0) "now")
+(parsed== (* 0) "just now")
+(parsed== (* 0) "365 days ago 1 year later")
+(parsed== (* 0) "1 second 1 second ago")
+(parsed== (* 1) "1 second")
+(parsed== (* 1) "1 seconds")
+(parsed== (* 1) "1second")
+(parsed== (* 365 24 60 60) "1year")
+(parsed== (* 365 24 60 60) "1 year")
+(parsed== (* 365 24 60 60) "1y")
+(parsed== (* 60 60) "1h")
+(parsed== (* 30 24 60 60) "1 month")
+(parsed== (* 30 24 60 60) "1 months")
+(parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y1h1m")
+(parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y 1h 1m")
 
 (let ([now (make-date 0 1 2 3 4 6 2020 12345)]) ;; Thu
   (== (make-date 0 1 2 3 10 6 2020 12345) (relative-date->date "next wed" now))
@@ -95,9 +95,9 @@
   )
 
 
-(define (text== t leeway-seconds)
+(define (text== t additional-seconds)
   (== t
-      (date->relative-date (add-second test-now leeway-seconds) test-now)))
+      (date->relative-date (add-second test-now additional-seconds) test-now)))
 
 (text== "just now"         0)
 (text== "1 second later"   1)
@@ -157,8 +157,8 @@
      [else
       #t])))
 
-(synonym== "a day" "a day later" "1 day later")
-(synonym== "a day ago" "an day ago")
+(synonym== "a day" "a day later" "1 day later" "tomorrow")
+(synonym== "a day ago" "an day ago" "yesterday")
 (synonym== "2 days ago" "2 day ago")
 (synonym== "an hour ago" "1 hour ago")
 (synonym== "2 hours ago" "120 minutes ago")
