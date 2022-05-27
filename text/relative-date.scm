@@ -72,7 +72,7 @@
   ($ seconds->date $ + (date->seconds d) n))
 
 (define (add-days d n)
-  (add-seconds d (* 24 60 60)))
+  (add-seconds d (* n 24 60 60)))
 
 ;; Just diff second part. (omit nanosecond part)
 (define (date-diff d1 d2)
