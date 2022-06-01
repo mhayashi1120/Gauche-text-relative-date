@@ -36,7 +36,31 @@ Can read followings:
 - 1 year later
 - 1 year later 365 days ago (=> means "now")
 
-## References
+# API
+
+## relative-date->date (Procedure: <string> -> <date> | #f)
+
+Accept one argument as string and return date or #f
+Optionally accept `now` as <date>
+
+## date->relative-date (Procedure: <date> -> <string>)
+
+Accept one argument as <date> and return string
+Optionally accept `now` as <date>
+
+## print-relative-date
+
+Low level api of `date->relative-date`
+
+## fuzzy-parse-relative-seconds (Procedure: <string> -> <number> | #f)
+
+return relative seconds.
+
+## relative-date-weekend (Parameter)
+
+Can change the weekend on your locale.
+
+# External References
 
 - [Configuration file measurement units](https://nginx.org/en/docs/syntax.html)
 - TODO at
