@@ -1,5 +1,5 @@
 ;;;
-;;; Relative (and fuzzy) datetime (as text)
+;;; Relative(fuzzy) datetime
 ;;;
 
 (define-module text.relative-date
@@ -59,7 +59,6 @@
   ($ floor->exact $ time->seconds $ date->time-utc d))
 
 (define (seconds->date s :optional (zone #f))
-  ;; TODO more smart
   (define time->date
     (if zone
       (cut time-utc->date <> zone)
