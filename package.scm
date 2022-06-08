@@ -4,12 +4,11 @@
 
 (define-gauche-package "Gauche-text-relative-date"
   ;;
-  :version "0.5.4"
+  :version "0.5.5"
 
   ;; Description of the package.  The first line is used as a short
   ;; summary.
-  :description "Sample package.scm\n\
-                Write your package description here."
+  :description "Parse and Construct relative date."
 
   ;; List of dependencies.
   ;; Example:
