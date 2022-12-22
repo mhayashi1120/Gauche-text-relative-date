@@ -171,13 +171,13 @@
     (let1 n (ensure-number (string-trim-both (m 1)))
       (cond
        [(#/^((year|month|day|hour|minute|min|second|sec)s?|[ymd])[ \t]*/i (m 'after)) =>
-        (^ [m2]
-          (let1 unit (ensure-unit-seconds (m2 1))
-            (if-let1 m3 (#/^(later|ago)/ (m2 'after))
-              (let1 direction (ensure-direction (m3 1))
-                (list (m3 'after) (* n unit direction)))
+        (^ [m-unit]
+          (let1 unit (ensure-unit-seconds (m-unit 1))
+            (if-let1 m-direction (#/^(later|ago)/ (m-unit 'after))
+              (let1 direction (ensure-direction (m-direction 1))
+                (list (m-direction 'after) (* n unit direction)))
               ;; Default is "later"
-              (list (m2 'after) (* n unit 1)))))]
+              (list (m-unit 'after) (* n unit 1)))))]
        [else
         #f]))))
 
@@ -264,9 +264,9 @@
      [(#/^(this|next|last)[ \t]+/i s) =>
       (^m 
        (and-let* ([prefix (m 1)]
-                  [m2 (weekday-re (string-trim (m 'after)))]
-                  [weekday (m2 1)])
-         (list (m2 'after) (compute-weekday prefix weekday))))]
+                  [m-day (weekday-re (string-trim (m 'after)))]
+                  [weekday (m-day 1)])
+         (list (m-day 'after) (compute-weekday prefix weekday))))]
      [(weekday-re s) => 
       (^m (let ([weekday (m 1)])
             (list (m 'after) (compute-weekday "this" weekday))))]
