@@ -25,8 +25,6 @@ Can read followings:
 - 1h 2min 3sec == 1h 2minutes 3seconds
 - next thu == next Thursday
 - next mon == Next Monday
-- 01:02:03 (TODO not yet supported)
-- 01:02:03 ago (TODO not yet supported)
 
 ## Examples (date->relative-date)
 
@@ -63,6 +61,6 @@ Can change the weekend on your locale.
 # External References
 
 - [Configuration file measurement units](https://nginx.org/en/docs/syntax.html)
-- TODO at
+- TODO unix at
 - [Date input formats (GNU Coreutils 9.1)](https://www.gnu.org/software/coreutils/manual/html_node/Date-input-formats.html#Date-input-formats) (Not exact same although)
 
