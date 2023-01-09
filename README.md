@@ -67,6 +67,6 @@ Can change the weekend on your locale.
 # External References
 
 - [Configuration file measurement units](https://nginx.org/en/docs/syntax.html)
-- TODO unix at
+- ref: Debian /usr/share/doc/at/timespec
 - [Date input formats (GNU Coreutils 9.1)](https://www.gnu.org/software/coreutils/manual/html_node/Date-input-formats.html#Date-input-formats) (Not exact same although)
 
