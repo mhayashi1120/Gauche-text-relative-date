@@ -277,6 +277,8 @@
 ;;; API
 ;;;
 
+;; ## Print <date> to `current-output-port`
+;; -> <void>
 (define (print-relative-date d :optional (now (current-date)))
   (let* ([diff-sec (- (date->seconds d) (date->seconds now))]
          [diff-abs (abs diff-sec)]
@@ -323,19 +325,21 @@
      [(negative? sign)
       (format #t " ago")])))
 
+;; ## Pretty print <date>
 ;; <date> -> <string>
 (define (date->relative-date d :optional (now (current-date)))
   (with-output-to-string
     (^[] (print-relative-date d now))))
 
+;; ## Parse relative date S as <date>
 ;; <string> -> <date> | #f
 (define (relative-date->date s :optional (now (current-date)))
   (and-let* ([sec (fuzzy-parse-relative-seconds s now)]
              [result-sec (+ (date->seconds now) sec)])
     (seconds->date result-sec (date-zone-offset now))))
 
-;; return seconds if TEXT parse is succeeded.
-;; return with #f if failed.
+;; ## Parse relative TEXT as seconds.
+;; -> <number> | #f
 (define (fuzzy-parse-relative-seconds text :optional (now (current-date)))
   (or (try-parse-full-symbolic text)
       (let loop ([source (string-trim-right text)]
