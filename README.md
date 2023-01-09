@@ -1,6 +1,12 @@
 # Gauche-text-relative-date
 
-Intended to use roughly parse date text.
+Roughly parse date text and print relative time more user friendly.
+
+Following use case are intended:
+
+- Any configuration file.
+- Parse command line argument.
+- Print timeline datetime more friendly. (e.g. Twitter)
 
 Main entry procedures are:
 

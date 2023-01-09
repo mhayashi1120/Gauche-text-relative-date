@@ -274,7 +274,7 @@
       #f])))
 
 ;;;
-;;; API
+;;; # API
 ;;;
 
 ;; ## Print <date> to `current-output-port`
