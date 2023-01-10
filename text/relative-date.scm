@@ -262,12 +262,12 @@
   (let* ([weekday-re (vector->iregexp-reader abbreviate-weekdays formal-weekdays)])
     (cond
      [(#/^(this|next|last)[ \t]+/i s) =>
-      (^m 
+      (^m
        (and-let* ([prefix (m 1)]
                   [m-day (weekday-re (string-trim (m 'after)))]
                   [weekday (m-day 1)])
          (list (m-day 'after) (compute-weekday prefix weekday))))]
-     [(weekday-re s) => 
+     [(weekday-re s) =>
       (^m (let ([weekday (m 1)])
             (list (m 'after) (compute-weekday "this" weekday))))]
      [else
