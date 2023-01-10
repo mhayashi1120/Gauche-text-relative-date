@@ -7,7 +7,16 @@
 -- l10n guideline (or (l10n-relative-parse-date s) (relative-date->date s)) or some parameter as list and process by fuzzy-parse-relative-seconds
 - "01:02:03", "01:02:03 ago"
 - 01-05 like text parsed as "Jan, 5th". 
-   - `Now` 2022-12-31 then 2023-01-05 
-   - `Now` 2022-01-30 then 2022-01-05
+   - `Now` = 2022-12-31 then 2023-01-05 
+   - `Now` = 2022-01-30 then 2022-01-05
    - Maybe ... 6 month
-
+- Next 5 (and Previous)
+   - `Now` = 2022-01-02 then 2022-01-05
+   - `Now` = 2022-01-06 then 2022-02-05
+- define general Month (yyyy-MM)
+- deifne generate Day (yyyy-MM-dd)
+   - "05, Jan 2022" -> 2022-01-05
+   - "2022-01-05" -> 2022-01-05
+   - "05, Jan" -> Relative with 01-05
+- define general Time (maybe just hh:mm, hh:mm:ss form)
+- introduce new option `:direction-weight` :future / :past / :fuzzy (default)
