@@ -10,7 +10,11 @@
 (use text.relative-date)
 (test-module 'text.relative-date)
 
-(define test-now (make-date 0 1 2 3 4 5 2020 12345))
+;; Easy to generate date. This package didn't use nanosec.
+(define (build-date y m d H M S tz)
+  (make-date 0 S M H d m y tz))
+
+(define test-now (build-date 2020 5 4 3 2 1 12345))
 
 (define (add-second d sec)
   (let* ([date->sec (with-module text.relative-date date->seconds)]
@@ -49,72 +53,75 @@
 (parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y1hour1month")
 (parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y 1hour 1month")
 
-(let ([now (make-date 0 1 2 3 4 6 2020 12345)])
-  (== (make-date 0 0 4 3 4 6 2020 12345) (relative-date->date "03:04" now))
-  (== (make-date 0 0 58 23 3 6 2020 12345) (relative-date->date "23:58" now))
+(let ([now (build-date 2020 6 4 3 2 1 12345)])
+  (== (build-date 2020 6 4 03 04 0 12345) (relative-date->date "03:04" now))
+  (== (build-date 2020 6 3 23 58 0 12345) (relative-date->date "23:58" now))
   )
 
-(let ([now (make-date 0 1 2 3 30 12 2022 31400)])
-  (== (make-date 0 0 0 0 15 12 2022 31400) (relative-date->date "December, 15" now))
-  (== (make-date 0 0 0 0 16 11 2022 31400) (relative-date->date "November, 16" now))
-  (== (make-date 0 0 0 0 17 5 2023 31400) (relative-date->date "May 17" now))
-  (== (make-date 0 0 0 0 2 1 2023 31400) (relative-date->date "Jan, 02" now))
-  (== (make-date 0 0 0 0 3 1 2023 31400) (relative-date->date "Jan 3" now))
+(let ([now (build-date 2022 12 30 3 2 1 31400)])
+  (== (build-date 2022 12 15 0 0 0 31400) (relative-date->date "December, 15" now))
+  (== (build-date 2022 11 16 0 0 0 31400) (relative-date->date "November, 16" now))
+  (== (build-date 2023 05 17 0 0 0 31400) (relative-date->date "May 17" now))
+  (== (build-date 2023 01 02 0 0 0 31400) (relative-date->date "Jan, 02" now))
+  (== (build-date 2023 01 02 0 0 0 31400) (relative-date->date "2 Jan" now))
+  (== (build-date 2023 01 03 0 0 0 31400) (relative-date->date "Jan 3" now))
   ;; can handle unexists day
-  (== (make-date 0 0 0 0 1 3 2023 31400) (relative-date->date "Feb 29" now))
+  (== (build-date 2023 03 01 0 0 0 31400) (relative-date->date "Feb 29" now))
+  (== (build-date 2023 03 01 0 0 0 31400) (relative-date->date "29 Feb" now))
+  (== (build-date 2023 03 01 0 0 0 31400) (relative-date->date "29, Feb" now))
   )
 
-(let ([now (make-date 0 1 2 3 4 6 2020 12345)]) ;; Thu
-  (== (make-date 0 0 30 3 4 6 2020 12345) (relative-date->date "03:30" now))
-  (== (make-date 0 0 35 5 4 6 2020 12345) (relative-date->date "05:35" now))
-  (== (make-date 0 0 0 3 4 6 2020 12345) (relative-date->date "03:00" now))
-  (== (make-date 0 0 58 23 3 6 2020 12345) (relative-date->date "23:58" now))
-  (== (make-date 0 0 58 23 4 6 2020 12345) (relative-date->date "23:58" now :direction-weight :today))
+(let ([now (build-date 2020 06 4 3 2 1 12345)]) ;; Thu
+  (== (build-date 2020 6 4 03 30 0 12345) (relative-date->date "03:30" now))
+  (== (build-date 2020 6 4 05 35 0 12345) (relative-date->date "05:35" now))
+  (== (build-date 2020 6 4 03 0 0 12345) (relative-date->date "03:00" now))
+  (== (build-date 2020 6 3 23 58 0 12345) (relative-date->date "23:58" now))
+  (== (build-date 2020 6 4 23 58 0 12345) (relative-date->date "23:58" now :direction-weight :today))
   )
 
-(let ([now (make-date 0 1 2 3 4 6 2020 12345)]) ;; Thu
-  (== (make-date 0 1 2 3 10 6 2020 12345) (relative-date->date "next wed" now))
-  (== (make-date 0 1 2 3 3 6 2020 12345) (relative-date->date "last wed" now))
-  (== (make-date 0 1 2 3 3 6 2020 12345) (relative-date->date "this wed" now))
+(let ([now (build-date 2020 6 4 3 2 1 12345)]) ;; Thu
+  (== (build-date 2020 6 10 3 2 1 12345) (relative-date->date "next wed" now))
+  (== (build-date 2020 6 03 3 2 1 12345) (relative-date->date "last wed" now))
+  (== (build-date 2020 6 03 3 2 1 12345) (relative-date->date "this wed" now))
 
-  (== (make-date 0 1 2 3 11 6 2020 12345) (relative-date->date "next thu" now))
-  (== (make-date 0 1 2 3 28 5 2020 12345) (relative-date->date "last thu" now))
-  (== (make-date 0 1 2 3 4 6 2020 12345) (relative-date->date "this thu" now))
+  (== (build-date 2020 6 11 3 2 1 12345) (relative-date->date "next thu" now))
+  (== (build-date 2020 5 28 3 2 1 12345) (relative-date->date "last thu" now))
+  (== (build-date 2020 6 04 3 2 1 12345) (relative-date->date "this thu" now))
 
-  (== (make-date 0 1 2 3 5 6 2020 12345) (relative-date->date "next fri" now))
-  (== (make-date 0 1 2 3 29 5 2020 12345) (relative-date->date "last fri" now))
-  (== (make-date 0 1 2 3 5 6 2020 12345) (relative-date->date "this fri" now))
+  (== (build-date 2020 6 05 3 2 1 12345) (relative-date->date "next fri" now))
+  (== (build-date 2020 5 29 3 2 1 12345) (relative-date->date "last fri" now))
+  (== (build-date 2020 6 05 3 2 1 12345) (relative-date->date "this fri" now))
 
   )
 
-(let ([now (make-date 0 1 2 3 14 5 2022 32600)]) ;; Sat
+(let ([now (build-date 2022 5 14 3 2 1 32600)]) ;; Sat
   ;; default parameter
   (parameterize ([relative-date-weekend 6])
-    (== (make-date 0 1 2 3 20 5 2022 32600) (relative-date->date "next fri" now))
-    (== (make-date 0 1 2 3 13 5 2022 32600) (relative-date->date "last fri" now))
-    (== (make-date 0 1 2 3 13 5 2022 32600) (relative-date->date "this fri" now))
+    (== (build-date 2022 5 20 3 2 1 32600) (relative-date->date "next fri" now))
+    (== (build-date 2022 5 13 3 2 1 32600) (relative-date->date "last fri" now))
+    (== (build-date 2022 5 13 3 2 1 32600) (relative-date->date "this fri" now))
 
-    (== (make-date 0 1 2 3 21 5 2022 32600) (relative-date->date "next sat" now))
-    (== (make-date 0 1 2 3  7 5 2022 32600) (relative-date->date "last sat" now))
-    (== (make-date 0 1 2 3 14 5 2022 32600) (relative-date->date "this sat" now))
+    (== (build-date 2022 5 21 3 2 1 32600) (relative-date->date "next sat" now))
+    (== (build-date 2022 5 07 3 2 1 32600) (relative-date->date "last sat" now))
+    (== (build-date 2022 5 14 3 2 1 32600) (relative-date->date "this sat" now))
 
-    (== (make-date 0 1 2 3 15 5 2022 32600) (relative-date->date "next sun" now))
-    (== (make-date 0 1 2 3  8 5 2022 32600) (relative-date->date "last sun" now))
-    (== (make-date 0 1 2 3  8 5 2022 32600) (relative-date->date "this sun" now))
+    (== (build-date 2022 5 15 3 2 1 32600) (relative-date->date "next sun" now))
+    (== (build-date 2022 5 08 3 2 1 32600) (relative-date->date "last sun" now))
+    (== (build-date 2022 5 08 3 2 1 32600) (relative-date->date "this sun" now))
     )
   ;; Weekend as Sunday
   (parameterize ([relative-date-weekend 0])
-    (== (make-date 0 1 2 3 20 5 2022 32600) (relative-date->date "next fri" now))
-    (== (make-date 0 1 2 3 13 5 2022 32600) (relative-date->date "last fri" now))
-    (== (make-date 0 1 2 3 13 5 2022 32600) (relative-date->date "this fri" now))
+    (== (build-date 2022 5 20 3 2 1 32600) (relative-date->date "next fri" now))
+    (== (build-date 2022 5 13 3 2 1 32600) (relative-date->date "last fri" now))
+    (== (build-date 2022 5 13 3 2 1 32600) (relative-date->date "this fri" now))
 
-    (== (make-date 0 1 2 3 21 5 2022 32600) (relative-date->date "next sat" now))
-    (== (make-date 0 1 2 3  7 5 2022 32600) (relative-date->date "last sat" now))
-    (== (make-date 0 1 2 3 14 5 2022 32600) (relative-date->date "this sat" now))
+    (== (build-date 2022 5 21 3 2 1 32600) (relative-date->date "next sat" now))
+    (== (build-date 2022 5 07 3 2 1 32600) (relative-date->date "last sat" now))
+    (== (build-date 2022 5 14 3 2 1 32600) (relative-date->date "this sat" now))
 
-    (== (make-date 0 1 2 3 15 5 2022 32600) (relative-date->date "next sun" now))
-    (== (make-date 0 1 2 3  8 5 2022 32600) (relative-date->date "last sun" now))
-    (== (make-date 0 1 2 3 15 5 2022 32600) (relative-date->date "this sun" now)) ;only differ
+    (== (build-date 2022 5 15 3 2 1 32600) (relative-date->date "next sun" now))
+    (== (build-date 2022 5 08 3 2 1 32600) (relative-date->date "last sun" now))
+    (== (build-date 2022 5 15 3 2 1 32600) (relative-date->date "this sun" now)) ;only differ
     )
   )
 
