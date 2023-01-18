@@ -474,11 +474,10 @@
 ;; ## Parse relative TEXT as seconds.
 ;; - :now : <date>
 ;; - :direction-weight : :fuzzy (default) / :today / :future / :past
-;;     Some of non date specific unit (e.g. "03:04" , "03:04:05"), that should return in
+;;     Some of inexact date specific unit (e.g. "03:04", "Jan, 05"), that should return in
 ;;     any context.  If you are working on `2023-01-18 23:50` then type `00:20`
 ;;        almost case want to be pointed `2023-01-19 00:20`.
-;;     This option doesn't affect date specific unit.
-;;     And maybe extend support Month-Day format (MM/DD, DD/MM) in future release.
+;;     This option doesn't affect any exact date unit.
 ;;     - :fuzzy : The nearest point of time from `now`.
 ;;     - :today : Time part as today based on `now`. (This is previous default behavior)
 ;;     - :future : Never return past time from `now`. (Use-case schedule ...)
