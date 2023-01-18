@@ -4,7 +4,7 @@
 
 (define-gauche-package "Gauche-text-relative-date"
   ;;
-  :version "0.5.7"
+  :version "0.6.0"
 
   ;; Description of the package.  The first line is used as a short
   ;; summary.
@@ -14,7 +14,7 @@
   ;; Example:
   ;;     :require (("Gauche" (>= "0.9.5"))  ; requires Gauche 0.9.5 or later
   ;;               ("Gauche-gl" "0.6"))     ; and Gauche-gl 0.6
-  :require (("Gauche" (>= "0.9.11-p1")))
+  :require (("Gauche" (>= "0.9.12")))
 
   ;; List of providing modules
   ;; NB: This will be recognized >= Gauche 0.9.7.
@@ -36,9 +36,7 @@
   ;; e.g. ("BSD")
   :licenses ("BSD")
 
-  ;; Homepage URL, if any.
-  ; :homepage "http://example.com/Gauche-text-relative-date/"
+  :homepage "https://github.com/mhayashi1120/Gauche-text-relative-date"
 
-  ;; Repository URL, e.g. github
-  ; :repository "http://example.com/Gauche-text-relative-date.git"
+  :repository "git@github.com:mhayashi1120/Gauche-text-relative-date.git"
   )

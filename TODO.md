@@ -18,5 +18,3 @@
    - "05, Jan 2022" -> 2022-01-05
    - "2022-01-05" -> 2022-01-05
    - "05, Jan" -> Relative with 01-05
-- define general Time (maybe just hh:mm, hh:mm:ss form)
-- introduce new option `:direction-weight` :future / :past / :fuzzy (default)

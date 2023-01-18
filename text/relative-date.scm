@@ -13,7 +13,7 @@
    print-relative-date
    relative-date-weekend
    relative-date->date date->relative-date
-   fuzzy-parse-relative-seconds
+   fuzzy-parse-relative-seconds parse-fuzzy-seconds
    ))
 (select-module text.relative-date)
 
@@ -182,17 +182,37 @@
         #f]))))
 
 ;; -> (REST DIFF-SEC)
-(define (try-read-colon-separator s now)
+(define (try-read-colon-separator s now weight)
   (define (->number m i)
     (string->number (m i)))
 
   (define (diff-time hh mm ss)
-    (date-diff
-     (make-date
-      0 hh mm (or ss 0)
-      (date-day now) (date-month now) (date-year now)
-      (date-zone-offset now))
-     now))
+    (let* ([today (make-date
+                   0 (or ss 0) mm hh
+                   (date-day now) (date-month now) (date-year now)
+                   (date-zone-offset now))]
+           [today* (date-diff today now)]
+           [a-day* (* 24 60 60)])
+
+      (ecase weight
+        [(:today)
+         today*]
+        [(:fuzzy)
+         (cond
+          [(<= (abs today*) (div a-day* 2))
+           today*]
+          [(positive? today*)
+           (- today* a-day*)]
+          [else
+           (+ today* a-day*)])]
+        [(:past)
+         (if (negative? today*)
+           today*
+           (- today* a-day*))]
+        [(:future)
+         (if (negative? today*)
+           (+ today* a-day*)
+           today*)])))
 
   (cond
    ;; Today's this time (hh:mm:ss).
@@ -333,14 +353,32 @@
 
 ;; ## Parse relative date S as <date>
 ;; <string> -> <date> | #f
-(define (relative-date->date s :optional (now (current-date)))
-  (and-let* ([sec (fuzzy-parse-relative-seconds s now)]
+(define (relative-date->date
+         s
+         :optional (now (current-date))
+         :key (direction-weight :fuzzy))
+  (and-let* ([now (or now (current-date))]
+             [sec (parse-fuzzy-seconds
+                   s
+                   :now now
+                   :direction-weight direction-weight)]
              [result-sec (+ (date->seconds now) sec)])
     (seconds->date result-sec (date-zone-offset now))))
 
 ;; ## Parse relative TEXT as seconds.
+;; - :now : <date>
+;; - :direction-weight : :fuzzy (default) / :today / :future / :past
+;;     Some of non date specific unit (e.g. "03:04" , "03:04:05"), that should return in
+;;     any context.  If you are working on `2023-01-18 23:50` then type `00:20`
+;;        almost case want to be pointed `2023-01-19 00:20`.
+;;     This option doesn't affect date specific unit.
+;;     And maybe extend support Month-Day format (MM/DD, DD/MM) in future release.
+;;     - :fuzzy : The nearest point of time from `now`.
+;;     - :today : Time part as today based on `now`. (This is previous behavior)
+;;     - :future : Never return past time from `now`. (Use-case schedule ...)
+;;     - :past : Never return future time from `now`. (Use-case blog ...)
 ;; -> <number> | #f
-(define (fuzzy-parse-relative-seconds text :optional (now (current-date)))
+(define (parse-fuzzy-seconds text :key (now (current-date)) (direction-weight :fuzzy))
   (or (try-parse-full-symbolic text)
       (let loop ([source (string-trim-right text)]
                  [diff 0])
@@ -356,7 +394,7 @@
             (match-lambda
              [(rest sec)
               (loop rest (+ diff sec))])]
-           [(try-read-colon-separator s now) =>
+           [(try-read-colon-separator s now direction-weight) =>
             (match-lambda
              [(rest sec)
               (loop rest (+ diff sec))])]
@@ -366,3 +404,10 @@
               (loop rest (+ diff (* days 24 60 60)))])]
            [else
             #f])))))
+
+;; ## Parse relative TEXT as seconds.
+;; Old interface. Should consider to use `parse-fuzzy-seconds`
+;; - :now : <date>
+;; -> <number> | #f
+(define (fuzzy-parse-relative-seconds text :optional (now (current-date)))
+  (parse-fuzzy-seconds text :now now :direction-weight :fuzzy))

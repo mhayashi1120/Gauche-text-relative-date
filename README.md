@@ -31,6 +31,7 @@ Can read followings:
 - 1h 2min 3sec == 1h 2minutes 3seconds
 - next thu == next Thursday
 - next mon == Next Monday
+- 03:04 == The nearest 03:04am (depend on the weight setting)
 
 ## Examples (date->relative-date)
 

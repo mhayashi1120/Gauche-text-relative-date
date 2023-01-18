@@ -61,6 +61,12 @@
   (== (make-date 0 1 2 3 5 6 2020 12345) (relative-date->date "next fri" now))
   (== (make-date 0 1 2 3 29 5 2020 12345) (relative-date->date "last fri" now))
   (== (make-date 0 1 2 3 5 6 2020 12345) (relative-date->date "this fri" now))
+
+  (== (make-date 0 0 30 3 4 6 2020 12345) (relative-date->date "03:30" now))
+  (== (make-date 0 0 35 5 4 6 2020 12345) (relative-date->date "05:35" now))
+  (== (make-date 0 0 0 3 4 6 2020 12345) (relative-date->date "03:00" now))
+  (== (make-date 0 0 58 23 3 6 2020 12345) (relative-date->date "23:58" now))
+  (== (make-date 0 0 58 23 4 6 2020 12345) (relative-date->date "23:58" now :direction-weight :today))
   )
 
 (let ([now (make-date 0 1 2 3 14 5 2022 32600)]) ;; Sat
@@ -170,6 +176,7 @@
 (synonym== "next mon" "Next Monday")
 (synonym== "next mon next thu" "Next Monday Next Thursday")
 
+
 ;; Private procedure test
 
 (let1 proc (with-module text.relative-date date-weekday*)
@@ -196,6 +203,4 @@
 (inconvertible? "a day invalid trailing")
 (inconvertible? "invalid preceeding a day")
 
-;; If you don't want `gosh' to exit with nonzero status even if
-;; the test fails, pass #f to :exit-on-failure.
 (test-end :exit-on-failure #t)
