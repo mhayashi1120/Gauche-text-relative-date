@@ -49,6 +49,29 @@
 (parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y1hour1month")
 (parsed== (+ (* 365 24 60 60) (* 60 60) (* 30 24 60 60)) "1y 1hour 1month")
 
+(let ([now (make-date 0 1 2 3 4 6 2020 12345)])
+  (== (make-date 0 0 4 3 4 6 2020 12345) (relative-date->date "03:04" now))
+  (== (make-date 0 0 58 23 3 6 2020 12345) (relative-date->date "23:58" now))
+  )
+
+(let ([now (make-date 0 1 2 3 30 12 2022 31400)])
+  (== (make-date 0 0 0 0 15 12 2022 31400) (relative-date->date "December, 15" now))
+  (== (make-date 0 0 0 0 16 11 2022 31400) (relative-date->date "November, 16" now))
+  (== (make-date 0 0 0 0 17 5 2023 31400) (relative-date->date "May 17" now))
+  (== (make-date 0 0 0 0 2 1 2023 31400) (relative-date->date "Jan, 02" now))
+  (== (make-date 0 0 0 0 3 1 2023 31400) (relative-date->date "Jan 3" now))
+  ;; can handle unexists day
+  (== (make-date 0 0 0 0 1 3 2023 31400) (relative-date->date "Feb 29" now))
+  )
+
+(let ([now (make-date 0 1 2 3 4 6 2020 12345)]) ;; Thu
+  (== (make-date 0 0 30 3 4 6 2020 12345) (relative-date->date "03:30" now))
+  (== (make-date 0 0 35 5 4 6 2020 12345) (relative-date->date "05:35" now))
+  (== (make-date 0 0 0 3 4 6 2020 12345) (relative-date->date "03:00" now))
+  (== (make-date 0 0 58 23 3 6 2020 12345) (relative-date->date "23:58" now))
+  (== (make-date 0 0 58 23 4 6 2020 12345) (relative-date->date "23:58" now :direction-weight :today))
+  )
+
 (let ([now (make-date 0 1 2 3 4 6 2020 12345)]) ;; Thu
   (== (make-date 0 1 2 3 10 6 2020 12345) (relative-date->date "next wed" now))
   (== (make-date 0 1 2 3 3 6 2020 12345) (relative-date->date "last wed" now))
@@ -62,11 +85,6 @@
   (== (make-date 0 1 2 3 29 5 2020 12345) (relative-date->date "last fri" now))
   (== (make-date 0 1 2 3 5 6 2020 12345) (relative-date->date "this fri" now))
 
-  (== (make-date 0 0 30 3 4 6 2020 12345) (relative-date->date "03:30" now))
-  (== (make-date 0 0 35 5 4 6 2020 12345) (relative-date->date "05:35" now))
-  (== (make-date 0 0 0 3 4 6 2020 12345) (relative-date->date "03:00" now))
-  (== (make-date 0 0 58 23 3 6 2020 12345) (relative-date->date "23:58" now))
-  (== (make-date 0 0 58 23 4 6 2020 12345) (relative-date->date "23:58" now :direction-weight :today))
   )
 
 (let ([now (make-date 0 1 2 3 14 5 2022 32600)]) ;; Sat

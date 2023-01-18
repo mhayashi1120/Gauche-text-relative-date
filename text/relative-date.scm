@@ -48,6 +48,21 @@
     "September" "October" "November" "December"
     ))
 
+(define suffixed-ordinal-days
+  (list->vector
+   (map
+    (^i
+     (case (mod i 10)
+       [(1)
+        (format "~ast" i)]
+       [(2)
+        (format "~and" i)]
+       [(3)
+        (format "~ard" i)]
+       [else
+        (format "~ath" i)]))
+    (iota 31 1))))
+
 (define (ci-index-of v vec)
   (find-index (^x (string-ci=? v x)) vec))
 
@@ -74,6 +89,13 @@
 (define (add-days d n)
   (add-seconds d (* n 24 60 60)))
 
+(define (add-year d n)
+  (make-date
+   (date-nanosecond d) (date-second d) (date-minute d)
+   (date-hour d) (date-day d) (date-month d)
+   (+ (date-year d) n)
+   (date-zone-offset d)))
+
 ;; Just diff second part. (omit nanosecond part)
 (define (date-diff d1 d2)
   (- (date->seconds d1) (date->seconds d2)))
@@ -90,6 +112,15 @@
 (define (find-weekday-index s)
   (or (ci-index-of s abbreviate-weekdays)
       (ci-index-of s formal-weekdays)))
+
+(define (find-month-index s)
+  (or (ci-index-of s abbreviate-months)
+      (ci-index-of s formal-months)))
+
+(define (find-day-index s)
+  (or (ci-index-of s suffixed-ordinal-days)
+      (and-let1 n (string->number s)
+        (- n 1))))
 
 (define (date-weekday* d)
   (weekday->weekday* (date-weekday d)))
@@ -206,13 +237,13 @@
           [else
            (+ today* a-day*)])]
         [(:past)
-         (if (negative? today*)
-           today*
-           (- today* a-day*))]
+         (if (positive? today*)
+           (- today* a-day*)
+           today*)]
         [(:future)
-         (if (negative? today*)
-           (+ today* a-day*)
-           today*)])))
+         (if (positive? today*)
+           today*
+           (+ today* a-day*))])))
 
   (cond
    ;; Today's this time (hh:mm:ss).
@@ -233,12 +264,87 @@
    [else
     #f]))
 
-(define (vector->iregexp-reader . vs)
-  ($ (cut string->regexp <> :case-fold #t)
-     $ (cut format "^(~a)\\b" <>)
+(define (try-read-common-day s now weight)
+
+  (define (compute-day month-i day-i)
+    (let* ([month (+ month-i 1)]
+           [day (+ day-i 1)]
+           [this-year (make-date
+                       0 0 0 0
+                       day month (date-year now)
+                       (date-zone-offset now))]
+           [this-year* (date-diff this-year now)]
+           [a-year* (* 24 60 60 365)])
+
+      ;; TODO
+      (ecase weight
+        [(:today)
+         this-year*]
+        [(:fuzzy)
+         (cond
+          [(<= (abs this-year*) (div a-year* 2))
+           this-year*]
+          [(positive? this-year*)
+           (date-diff (add-year this-year -1) now)]
+          [else
+           (date-diff (add-year this-year 1) now)])]
+        [(:past)
+         (if (positive? this-year*)
+           (date-diff (add-year this-year -1) now)
+           this-year*)]
+        [(:future)
+         (if (positive? this-year*)
+           this-year*
+           (date-diff (add-year this-year 1) now))])))
+
+  ;; ## can read following examples:
+  ;; -  "Jan, 1th"
+  ;; - "05 Feb"
+  ;; - "29, Feb"
+  ;; - "31th December"
+  ;; - "November 31"
+  ;; - "Oct 28"
+  (define month* (vector->regexp-string abbreviate-months formal-months))
+  (define day* (vector->regexp-string suffixed-ordinal-days))
+  (define day** "([0-9]{1,2})\\b")
+  (define skip* "[, \t]+")
+
+  (cond
+   [((string->regexp #"^~|month*|~|skip*|~|day*|") s) =>
+    (^m
+     (list
+      (m 'after)
+      (compute-day (find-month-index (m 1))
+                   (find-day-index (m 2)))))]
+   [((string->regexp #"^~|month*|~|skip*|~|day**|") s) =>
+    (^m
+     (list
+      (m 'after)
+      (compute-day (find-month-index (m 1))
+                   (find-day-index (m 2)))))]
+   [((string->regexp #"^~|day*|~|skip*|~|month*|") s) =>
+    (^m
+     (list
+      (m 'after)
+      (compute-day (find-month-index (m 2))
+                   (find-day-index (m 1)))))]
+   [((string->regexp #"^~|day**|~|skip*|~|month*|") s) =>
+    (^m
+     (list
+      (m 'after)
+      (compute-day (find-month-index (m 2))
+                   (find-day-index (m 1)))))]
+   [else #f]))
+
+(define (vector->regexp-string . vs)
+  ($ (cut format "(~a)\\b" <>)
      $ (cut string-join <> "|")
      $ map regexp-quote
      $ append-map vector->list vs))
+
+(define (vector->iregexp-reader . vs)
+  ($ (cut string->regexp <> :case-fold #t)
+     $ apply vector->regexp-string vs))
 
 ;; "last":
 ;;    ----
@@ -374,10 +480,10 @@
 ;;     This option doesn't affect date specific unit.
 ;;     And maybe extend support Month-Day format (MM/DD, DD/MM) in future release.
 ;;     - :fuzzy : The nearest point of time from `now`.
-;;     - :today : Time part as today based on `now`. (This is previous behavior)
+;;     - :today : Time part as today based on `now`. (This is previous default behavior)
 ;;     - :future : Never return past time from `now`. (Use-case schedule ...)
 ;;     - :past : Never return future time from `now`. (Use-case blog ...)
-;; -> <number> | #f
+;; -> SECOND:<number> | #f
 (define (parse-fuzzy-seconds text :key (now (current-date)) (direction-weight :fuzzy))
   (or (try-parse-full-symbolic text)
       (let loop ([source (string-trim-right text)]
@@ -395,6 +501,10 @@
              [(rest sec)
               (loop rest (+ diff sec))])]
            [(try-read-colon-separator s now direction-weight) =>
+            (match-lambda
+             [(rest sec)
+              (loop rest (+ diff sec))])]
+           [(try-read-common-day s now direction-weight) =>
             (match-lambda
              [(rest sec)
               (loop rest (+ diff sec))])]
