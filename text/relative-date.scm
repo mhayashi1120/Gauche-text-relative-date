@@ -276,7 +276,6 @@
            [this-year* (date-diff this-year now)]
            [a-year* (* 24 60 60 365)])
 
-      ;; TODO
       (ecase weight
         [(:today)
          this-year*]
