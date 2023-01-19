@@ -44,15 +44,15 @@ Can read followings:
 
 # API
 
+Almost procedures optionally accept `now` as \<date>
+
 ## relative-date->date (Procedure: \<string> -> \<date> | #f)
 
 Accept one argument as string and return date or #f
-Optionally accept `now` as \<date>
 
 ## date->relative-date (Procedure: \<date> -> \<string>)
 
 Accept one argument as \<date> and return string
-Optionally accept `now` as \<date>
 
 ## print-relative-date (Procedure: \<date> -> \<void>)
 
