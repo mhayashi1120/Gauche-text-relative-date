@@ -12,9 +12,9 @@ Main entry procedures are:
 
 - relative-date->date
 - date->relative-date
-- fuzzy-parse-relative-seconds
+- parse-fuzzy-seconds
 
-This package roughly computed as Year (= 365 days) Month (= 30 days) . 
+This package roughly computed as Year (= 365 days) Month (= 30 days) in some of conversion.
 And **NOT** been considered to try exact parsing and point exact time.
 
 ## Examples (relative-date->date):
@@ -32,6 +32,7 @@ Can read followings:
 - next thu == next Thursday
 - next mon == Next Monday
 - 03:04 == The nearest 03:04am (depend on the weight setting)
+- 29, Feb == The nearest February 29 or March 1
 
 ## Examples (date->relative-date)
 
@@ -53,11 +54,11 @@ Optionally accept `now` as \<date>
 Accept one argument as \<date> and return string
 Optionally accept `now` as \<date>
 
-## print-relative-date
+## print-relative-date (Procedure: \<date> -> \<void>)
 
 Low level api of `date->relative-date`
 
-## fuzzy-parse-relative-seconds (Procedure: \<string> -> \<number> | #f)
+## parse-fuzzy-seconds (Procedure: \<string> -> \<number> | #f)
 
 return relative seconds.
 
