@@ -21,9 +21,15 @@
 ;;; Parameter
 ;;;
 
+;; ## <parameter { <integer>[0, 6]}>
 ;; default `6` means "Saturday". This maybe "Sunday" (= 0) some of cases.
 (define relative-date-weekend
   (make-parameter 6))
+
+;; ## <parameter <integer>>
+;; Range represent as `just now`
+(define just-now-range
+  (make-parameter 0))
 
 ;;;
 ;;; Constants
@@ -407,14 +413,16 @@
 (define (print-relative-date d :optional (now (current-date)))
   (let* ([diff-sec (- (date->seconds d) (date->seconds now))]
          [diff-abs (abs diff-sec)]
+         ;; Maybe destructively changed.
          [sign (cond
                 [(positive? diff-sec) 1]
                 [(negative? diff-sec) -1]
                 [else 0])]
          )
     (cond
-     [(= diff-abs 0)
-      (format #t "just now")]
+     [(<= diff-abs (just-now-range))
+      (format #t "just now")
+      (set! sign #f)]
      [(< diff-abs 60)
       (format #t "~a second" diff-abs)
       (when (< 1 diff-abs)
@@ -445,6 +453,7 @@
         (when (< 1 diff-year)
           (format #t "s")))])
     (cond
+     [(not (integer? sign))]
      [(positive? sign)
       (format #t " later")]
      [(negative? sign)
