@@ -7,9 +7,6 @@
 
 (test-start "text.relative-date")
 
-(use text.relative-date)
-(test-module 'text.relative-date)
-
 (load "./__tests__/basic.spec.scm")
 
 (test-end :exit-on-failure #t)

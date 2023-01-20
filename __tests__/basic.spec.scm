@@ -2,6 +2,8 @@
 (use text.relative-date)
 (use gauche.test)
 
+(test-module 'text.relative-date)
+
 ;; Examples
 (parsed== (* 0) "just now")
 (parsed== (* -1 24 60 60) "1 day ago")
