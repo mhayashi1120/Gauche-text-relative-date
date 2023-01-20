@@ -8,7 +8,6 @@
   (use util.match)
   (use srfi-19)
   (use gauche.parameter)
-  (use toolbox.rail)
   (export
    print-relative-date
    relative-date-weekend
@@ -373,7 +372,7 @@
                        [(member pref '("next"))
                         1]
                        [else
-                        (ASSERT #f)])]
+                        (error "Assert")])]
            [wi* (find-weekday-index* weekday)])
 
       (unless wi*
