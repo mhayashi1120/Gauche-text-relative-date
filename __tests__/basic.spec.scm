@@ -1,3 +1,7 @@
+(use test)
+(use text.relative-date)
+(use gauche.test)
+
 ;; Examples
 (parsed== (* 0) "just now")
 (parsed== (* -1 24 60 60) "1 day ago")
