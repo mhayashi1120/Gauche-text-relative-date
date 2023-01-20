@@ -1,9 +1,9 @@
-(define-module test
+(define-module unittest
   (use srfi-19)
   (use text.relative-date)
   (use gauche.test)
   (export-all))
-(select-module test)
+(select-module unittest)
 
 
 ;; Easy to generate date. This package didn't use nanosec.

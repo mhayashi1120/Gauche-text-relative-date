@@ -1,4 +1,4 @@
-(use test)
+(use unittest)
 (use text.relative-date)
 (use gauche.test)
 
