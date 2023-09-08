@@ -55,15 +55,15 @@ install : all
 	$(INSTALL) -m 444 -T $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
 
 uninstall :
-	@set -e; for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
+	@for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
 	$(INSTALL) -U $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
 
 clean :
-	@set -e; for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
+	@for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
 	rm -rf core $(TARGET) $(CLEANFILES) *~ test.log so_locations
 
 distclean : clean
-	@set -e; for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
+	@for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
 	rm -rf $(CONFIG_GENERATED)
 
 maintainer-clean : clean
