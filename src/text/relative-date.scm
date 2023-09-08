@@ -23,12 +23,15 @@
 ;; ## <parameter { <integer>[0, 6]}>
 ;; default `6` means "Saturday". This maybe "Sunday" (= 0) some of cases.
 (define relative-date-weekend
-  (make-parameter 6))
+  (make-parameter 6
+    (^x (begin0 (assume-type x <integer>)
+          (assume (<= 0 x 6))))))
 
 ;; ## <parameter <integer>>
 ;; Range represent as `just now`
 (define just-now-range
-  (make-parameter 0))
+  (make-parameter 0
+    (^x (assume-type x <integer>))))
 
 ;;;
 ;;; Constants
@@ -410,6 +413,9 @@
 ;; ## Print <date> to `current-output-port`
 ;; -> <void>
 (define (print-relative-date d :optional (now (current-date)))
+  (assume-type d <date>)
+  (assume-type now <date>)
+
   (let* ([diff-sec (- (date->seconds d) (date->seconds now))]
          [diff-abs (abs diff-sec)]
          ;; Maybe destructively changed.
@@ -461,6 +467,8 @@
 ;; ## Pretty print <date>
 ;; <date> -> <string>
 (define (date->relative-date d :optional (now (current-date)))
+  (assume-type d <date>)
+
   (with-output-to-string
     (^[] (print-relative-date d now))))
 
@@ -470,6 +478,10 @@
          s
          :optional (now (current-date))
          :key (direction-weight :fuzzy))
+  (assume-type s <string>)
+  (assume-type now (<?> <date>))
+  (assume-type direction-weight <keyword>)
+
   (and-let* ([now (or now (current-date))]
              [sec (parse-fuzzy-seconds
                    s
@@ -491,6 +503,10 @@
 ;;     - :past : Never return future time from `now`. (Use-case blog ...)
 ;; -> SECOND:<number> | #f
 (define (parse-fuzzy-seconds text :key (now (current-date)) (direction-weight :fuzzy))
+  (assume-type text <string>)
+  (assume-type now <date>)
+  (assume-type direction-weight <keyword>)
+
   (or (try-parse-full-symbolic text)
       (let loop ([source (string-trim-right text)]
                  [diff 0])
