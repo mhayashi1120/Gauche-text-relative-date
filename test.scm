@@ -1,5 +1,5 @@
 ;;;
-;;; Test gauche_text_relative_date
+;;; Test text.relative-date
 ;;;
 
 (use srfi-19)

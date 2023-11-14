@@ -42,13 +42,14 @@ GAUCHE_PKGARCHDIR = "$(DESTDIR)@GAUCHE_PKGARCHDIR@"
 
 LOCAL_GOSH = $(GOSH) -I$(SRC_PREFIX)
 SUBDIRS := src
-TEST_PATH = $(srcdir)/__tests__
+
+TEST_LOG = test.log
 
 all : $(TARGET)
 
 check : all
-	@rm -f test.log
-	$(LOCAL_GOSH) -I $(TEST_PATH) $(srcdir)/test.scm > test.log
+	@rm -f $(TEST_LOG)
+	$(LOCAL_GOSH) $(srcdir)/test.scm > $(TEST_LOG)
 
 install : all
 	@set -e; for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
@@ -60,7 +61,7 @@ uninstall :
 
 clean :
 	@for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
-	rm -rf core $(TARGET) $(CLEANFILES) *~ test.log so_locations
+	rm -rf core $(TARGET) $(CLEANFILES) *~ $(TEST_LOG) so_locations
 
 distclean : clean
 	@for d in $(SUBDIRS) ; do $(MAKE) -C $${d} $@ ; done
@@ -68,3 +69,6 @@ distclean : clean
 
 maintainer-clean : clean
 	rm -rf $(CONFIG_GENERATED)  VERSION
+
+validate :
+	$(GOSH) $(srcdir)/test.scm >> $(TEST_LOG)
