@@ -1,5 +1,7 @@
 # Gauche-text-relative-date
 
+[![CI](https://github.com/mhayashi1120/Gauche-text-relative-date/actions/workflows/build.yml/badge.svg)](https://github.com/mhayashi1120/Gauche-text-relative-date/actions/workflows/build.yml)
+
 Roughly parse date text and print relative time more user friendly.
 
 Following use case are intended:
